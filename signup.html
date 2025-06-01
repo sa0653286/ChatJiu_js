@@ -94,29 +94,42 @@
         import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
-        // __app_id: The unique ID for the current application instance.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // __firebase_config: Firebase configuration object, parsed from a JSON string.
-        // It provides the necessary credentials to connect to your Firebase project.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Fallback configuration for local development if __firebase_config is not defined.
-            apiKey: "YOUR_API_KEY", // Replace with your actual API Key if running locally without Canvas
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
-        };
-        // __initial_auth_token: A custom authentication token for initial sign-in.
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+        // Firebase configuration
+        // This configuration is now directly from your provided details.
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
+            authDomain: "jiujs-9f99e.firebaseapp.com",
+            projectId: "jiujs-9f99e",
+            storageBucket: "jiujs-9f99e.firebasestorage.app",
+            messagingSenderId: "435711965583",
+            appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
+            measurementId: "G-QFT9NVQTC7"
+        };
+
         // Initialize Firebase services
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); // Get the authentication service instance
-        const db = getFirestore(app); // Get the Firestore database service instance
-        const storage = getStorage(app); // Get the Storage service instance (though not directly used in sign-up logic)
-        const googleProvider = new GoogleAuthProvider(); // Initialize Google Auth Provider
+        let app;
+        let auth;
+        let db;
+        let storage;
+        let googleProvider;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app); // Get the authentication service instance
+            db = getFirestore(app); // Get the Firestore database service instance
+            storage = getStorage(app); // Get the Storage service instance (though not directly used in sign-up logic)
+            googleProvider = new GoogleAuthProvider(); // Initialize Google Auth Provider
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            // Display a message to the user if Firebase fails to initialize
+            document.getElementById('message-box').textContent = 'Error initializing Firebase. Please check your console.';
+            document.getElementById('message-box').classList.remove('hidden');
+            document.getElementById('message-box').classList.add('bg-red-100', 'text-red-800');
+        }
+
 
         let userId = null; // Variable to store the current user's UID
 
@@ -131,7 +144,7 @@
         const signinLink = document.getElementById('signin-link');
 
         // Define the URL for the home page after successful sign-up
-        const HOME_PAGE_URL = 'index.html';
+        const HOME_PAGE_URL = 'home.html';
 
         /**
          * Displays a message in the designated message box.
@@ -230,12 +243,16 @@
          * Displays success or error messages based on the outcome.
          */
         async function handleGoogleSignUp() {
+            // Ensure Firebase auth is initialized before attempting sign-up
+            if (!auth || !googleProvider) {
+                displayMessage('Firebase authentication is not initialized.', 'error');
+                console.error('Firebase Auth or Google Provider is not initialized.');
+                return;
+            }
+
             try {
                 // Attempt to sign in/up with Google using a popup
                 const result = await signInWithPopup(auth, googleProvider);
-                // You can access the Google Access Token if needed:
-                // const credential = GoogleAuthProvider.credentialFromResult(result);
-                // const token = credential.accessToken;
                 const user = result.user; // The signed-in user information
 
                 displayMessage(`Signed up with Google as ${user.displayName || user.email}`, 'success');
@@ -249,6 +266,8 @@
                     displayMessage('Google sign-up was cancelled.', 'error');
                 } else if (error.code === 'auth/cancelled-popup-request') {
                     displayMessage('A Google sign-up popup was already open. Please complete the previous one.', 'error');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    displayMessage('Google sign-up is not enabled for this Firebase project.', 'error');
                 } else {
                     displayMessage(`Failed to sign up with Google: ${error.message}`, 'error');
                 }
