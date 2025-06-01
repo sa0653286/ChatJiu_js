@@ -61,7 +61,6 @@
     </p>
   </div>
 
-  <!-- Firebase Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import {
@@ -71,28 +70,37 @@
       signInWithPopup
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-// ✅For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
-  authDomain: "jiujs-9f99e.firebaseapp.com",
-  projectId: "jiujs-9f99e",
-  storageBucket: "jiujs-9f99e.firebasestorage.app",
-  messagingSenderId: "435711965583",
-  appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
-  measurementId: "G-QFT9NVQTC7"
-};
+    // Firebase configuration (ensure this is correct for your project)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
+      authDomain: "jiujs-9f99e.firebaseapp.com",
+      projectId: "jiujs-9f99e",
+      storageBucket: "jiujs-9f99e.firebasestorage.app",
+      messagingSenderId: "435711965583",
+      appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
+      measurementId: "G-QFT9NVQTC7"
+    };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
 
+    // Get DOM elements
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const signinForm = document.getElementById('signin-form');
     const googleSigninButton = document.getElementById('google-signin-button');
     const messageBox = document.getElementById('message-box');
-    const HOME_PAGE_URL = 'index.html';
 
+    // IMPORTANT: Changed to home.html as per your request
+    const HOME_PAGE_URL = 'home.html'; 
+
+    /**
+     * Displays a message in the message box.
+     * @param {string} message - The message to display.
+     * @param {'success'|'error'} type - The type of message (determines color).
+     */
     function displayMessage(message, type) {
       messageBox.textContent = message;
       messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
@@ -101,17 +109,25 @@ const firebaseConfig = {
       } else {
         messageBox.classList.add('bg-red-100', 'text-red-800');
       }
+      // Hide the message after 5 seconds
       setTimeout(() => {
         messageBox.classList.add('hidden');
       }, 5000);
     }
 
+    /**
+     * Redirects the user to the home page.
+     */
     function redirectToHomePage() {
       window.location.href = HOME_PAGE_URL;
     }
 
+    /**
+     * Handles email and password sign-in.
+     * @param {Event} event - The form submission event.
+     */
     async function handleEmailSignIn(event) {
-      event.preventDefault();
+      event.preventDefault(); // Prevent default form submission
       const email = emailInput.value;
       const password = passwordInput.value;
 
@@ -123,10 +139,11 @@ const firebaseConfig = {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         displayMessage(`Signed in as ${userCredential.user.email}`, 'success');
-        redirectToHomePage();
+        redirectToHomePage(); // Redirect on successful sign-in
       } catch (error) {
         console.error("Sign-in error:", error);
         let msg = 'Failed to sign in.';
+        // Provide more specific error messages based on Firebase error codes
         if (error.code === 'auth/user-not-found') msg = 'No user found with this email.';
         else if (error.code === 'auth/wrong-password') msg = 'Incorrect password.';
         else if (error.code === 'auth/invalid-email') msg = 'Invalid email format.';
@@ -135,11 +152,14 @@ const firebaseConfig = {
       }
     }
 
+    /**
+     * Handles Google sign-in using a popup.
+     */
     async function handleGoogleSignIn() {
       try {
         const result = await signInWithPopup(auth, googleProvider);
         displayMessage(`Signed in as ${result.user.displayName || result.user.email}`, 'success');
-        redirectToHomePage();
+        redirectToHomePage(); // Redirect on successful sign-in
       } catch (error) {
         console.error("Google sign-in error:", error);
         const msg = error.code === 'auth/popup-closed-by-user'
@@ -149,8 +169,10 @@ const firebaseConfig = {
       }
     }
 
+    // Attach event listeners
     signinForm.addEventListener('submit', handleEmailSignIn);
     googleSigninButton.addEventListener('click', handleGoogleSignIn);
   </script>
 </body>
 </html>
+
