@@ -37,12 +37,43 @@
         .conversation-item:hover {
             background-color: #f0f4f8; /* Lighter blue on hover */
         }
+        /* Custom message box for alerts */
+        #message-box {
+            position: fixed;
+            top: 70px; /* Below header */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #message-box.success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+        }
+        #message-box.error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+        }
+        #message-box.info {
+            background-color: #bfdbfe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
+    <div id="message-box" class="hidden"></div>
+
     <header class="header bg-blue-900 text-white p-4 shadow-md flex justify-between items-center rounded-b-lg">
-        <h1 class="text-2xl font-bold text-indigo-200">Jiu_js</h1>
+        <button id="back-button" class="text-xl text-indigo-300 cursor-pointer hover:text-indigo-100">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-2xl font-bold text-indigo-200">Messages</h1>
         <div class="flex items-center space-x-4">
             <i class="fas fa-edit text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
             <i class="fas fa-ellipsis-h text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
@@ -52,7 +83,7 @@
     <main class="main-content p-4">
         <div id="conversations-list" class="space-y-2">
             <div id="loading-message" class="text-center text-gray-500 mt-8">Loading conversations...</div>
-            <div id="no-conversations-message" class="text-center text-gray-500 mt-8 hidden">No conversations yet. Start a new chat!</div>
+            <div id="no-conversations-message" class="text-center text-gray-500 mt-8 hidden">No conversations yet. Start a new chat by clicking on a user!</div>
         </div>
     </main>
 
@@ -80,63 +111,93 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
+        import {
+            getAuth,
             signInAnonymously,
             signInWithCustomToken,
-            onAuthStateChanged 
+            onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            query, 
-            onSnapshot, 
-            where, 
-            doc, 
-            getDoc 
+        import {
+            getFirestore,
+            collection,
+            query,
+            onSnapshot,
+            where,
+            doc,
+            getDoc
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
-            authDomain: "jiujs-social-media.firebaseapp.com",
-            projectId: "jiujs-social-media",
-            storageBucket: "jiujs-social-media.firebasestorage.app",
-            messagingSenderId: "828952698659",
-            appId: "1:828952698659:web:a75e23632ccce924eb3696",
-            measurementId: "G-4GDYQXMTR9"
-        };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app); // Included for completeness
+        // Firebase configuration - UPDATED to match your jiujs-9f99e project
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
+            authDomain: "jiujs-9f99e.firebaseapp.com",
+            projectId: "jiujs-9f99e",
+            storageBucket: "jiujs-9f99e.firebasestorage.app",
+            messagingSenderId: "435711965583",
+            appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
+            measurementId: "G-QFT9NVQTC7"
+        };
 
-        let userId = null;
+        // Initialize Firebase
+        let app;
+        let auth;
+        let db;
+        let storage;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            storage = getStorage(app);
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            displayMessage('Error initializing Firebase. Please check your console.', 'error');
+            return; // Stop execution if Firebase isn't initialized
+        }
+
+        let currentUserId = null; // Renamed for clarity
         let isAuthReady = false; // Flag to ensure auth is ready before fetching data
 
         // Get DOM elements
         const conversationsList = document.getElementById('conversations-list');
         const loadingMessage = document.getElementById('loading-message');
         const noConversationsMessage = document.getElementById('no-conversations-message');
+        const backButton = document.getElementById('back-button');
+        const messageBox = document.getElementById('message-box'); // Get the message box element
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success', 'error', 'info').
+         */
+        function displayMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Apply base and type classes
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
 
         /**
          * Renders a single conversation item.
          * @param {Object} userData - The data for the user (potential chat partner).
-         * @param {string} userId - The ID of the user.
+         * @param {string} targetUserId - The ID of the user.
          */
-        function renderConversationItem(userData, userId) {
+        function renderConversationItem(userData, targetUserId) {
             const itemElement = document.createElement('div');
             itemElement.className = 'conversation-item bg-white p-4 rounded-lg shadow-sm flex items-center space-x-4 cursor-pointer transition-colors duration-200';
-            itemElement.dataset.userId = userId; // Store user ID for potential chat room navigation
+            itemElement.dataset.userId = targetUserId; // Store user ID for potential chat room navigation
 
             const userAvatar = userData.photoURL || `https://placehold.co/40x40/e0e0e0/gray?text=${userData.displayName ? userData.displayName.charAt(0).toUpperCase() : 'U'}`;
-            const lastMessageSnippet = "Hey, how are you?"; // Placeholder
-            const lastMessageTime = "2h ago"; // Placeholder
+            // These placeholders would ideally be replaced with actual last message data from Firestore
+            const lastMessageSnippet = "Click to start chat!"; 
+            const lastMessageTime = ""; 
 
             itemElement.innerHTML = `
                 <img src="${userAvatar}" alt="User Avatar" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-500">
@@ -151,19 +212,22 @@
             conversationsList.appendChild(itemElement);
 
             itemElement.addEventListener('click', () => {
-                displayMessage(`Navigating to chat with ${userData.displayName || 'this user'} (User ID: ${userId})`, 'success');
-                console.log(`Simulating navigation to chat room with user: ${userId}`);
-                // In a full React app, this would be a React Router Link or history.push('/chat/' + userId)
-                // For a multi-page HTML app, you'd navigate to a chatroom.html?userId=...
+                displayMessage(`Simulating navigation to chat with ${userData.displayName || 'this user'} (User ID: ${targetUserId})`, 'info');
+                console.log(`Navigating to chat room with user: ${targetUserId}`);
+                // In a real app, you would navigate to a chatroom.html?partnerId=${targetUserId}
+                // For now, it's a console log and a message.
             });
         }
 
         /**
-         * Fetches and displays a list of potential chat partners (other users).
+         * Fetches and displays a list of potential chat partners (all other users).
          */
         function fetchUsersForConversations() {
-            if (!isAuthReady || !userId) {
+            if (!isAuthReady || !currentUserId) {
                 console.log("Authentication not ready or user not logged in, cannot fetch conversations.");
+                loadingMessage.classList.add('hidden');
+                noConversationsMessage.classList.remove('hidden');
+                noConversationsMessage.textContent = 'Please sign in to view and start conversations.';
                 return;
             }
 
@@ -171,41 +235,37 @@
             noConversationsMessage.classList.add('hidden');
             conversationsList.innerHTML = ''; // Clear existing items
 
-            // Assuming a 'users' collection where user profiles are stored
+            // Query the 'users' collection to get all user profiles
             const usersCollectionRef = collection(db, `artifacts/${appId}/public/data/users`);
             const q = query(usersCollectionRef);
 
             onSnapshot(q, (snapshot) => {
                 loadingMessage.classList.add('hidden');
-                let hasConversations = false;
+                let hasOtherUsers = false;
                 snapshot.forEach((doc) => {
                     const userData = doc.data();
-                    // Only show other users, not the current logged-in user
-                    if (doc.id !== userId && userData.displayName) { 
+                    // Only show other users, not the current logged-in user, and only if they have a display name
+                    if (doc.id !== currentUserId && userData.displayName) {
                         renderConversationItem(userData, doc.id);
-                        hasConversations = true;
+                        hasOtherUsers = true;
                     }
                 });
 
-                if (!hasConversations) {
+                if (!hasOtherUsers) {
                     noConversationsMessage.classList.remove('hidden');
+                    noConversationsMessage.textContent = 'No other users found to chat with yet.';
                 }
             }, (error) => {
                 console.error("Error fetching users for conversations:", error);
                 loadingMessage.classList.add('hidden');
-                displayMessage('Failed to load conversations. Please try again later.', 'error');
+                displayMessage('Failed to load users. Please try again later.', 'error');
             });
         }
 
-        /**
-         * Displays a temporary message (for debugging/feedback).
-         * @param {string} message - The message to display.
-         * @param {string} type - The type of message ('success' or 'error').
-         */
-        function displayMessage(message, type) {
-            console.log(`Message (${type}): ${message}`);
-            // You could add a visible message box similar to sign-in/sign-up if needed
-        }
+        // Event Listeners
+        backButton.addEventListener('click', () => {
+            window.history.back(); // Go back to the previous page
+        });
 
         // Authenticate with custom token or anonymously when the app loads
         window.onload = async function() {
@@ -226,17 +286,17 @@
         // Listen for authentication state changes and then fetch conversations
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                userId = user.uid;
+                currentUserId = user.uid;
                 isAuthReady = true;
-                console.log('Auth state changed: User is signed in with UID:', userId);
+                console.log('Auth state changed: User is signed in with UID:', currentUserId);
                 fetchUsersForConversations();
             } else {
-                userId = null;
+                currentUserId = null;
                 isAuthReady = true; // Auth is ready, but user is anonymous/signed out
                 console.log('Auth state changed: User is signed out or anonymous. Cannot fetch user-specific conversations.');
-                // If you want to show a general list even without login, modify fetchUsersForConversations to handle null userId
-                noConversationsMessage.classList.remove('hidden'); // Show no conversations if not logged in
                 loadingMessage.classList.add('hidden');
+                noConversationsMessage.classList.remove('hidden');
+                noConversationsMessage.textContent = 'Please sign in to view and start conversations.';
             }
         });
     </script>
