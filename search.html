@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - Search & Explore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background for content area */
+        }
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Enable scrolling for content */
+            padding-bottom: 64px; /* Space for the bottom nav */
+            padding-top: calc(64px + 56px); /* Space for header (64px) + search bar (approx 56px) */
+        }
+        .header, .search-bar-container, .bottom-nav {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+        .header {
+            top: 0;
+            left: 0;
+        }
+        .search-bar-container {
+            top: 64px; /* Position below the header */
+            left: 0;
+            background-color: #f3f4f6; /* Match body background */
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+        }
+        .bottom-nav {
+            bottom: 0;
+            left: 0;
+        }
+        .image-grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            aspect-ratio: 1 / 1; /* Ensure square images */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="header bg-blue-900 text-white p-4 shadow-md flex justify-between items-center rounded-b-lg">
+        <h1 class="text-2xl font-bold text-indigo-200">Jiu_js</h1>
+        <div class="flex items-center space-x-4">
+            <i class="fas fa-bell text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
+            <i class="fas fa-ellipsis-v text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
+        </div>
+    </header>
+
+    <div class="search-bar-container shadow-sm">
+        <div class="relative">
+            <input type="text" id="search-input" placeholder="Search for users or hashtags..."
+                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+    </div>
+
+    <main class="main-content p-1"> <div id="image-grid" class="grid grid-cols-3 gap-1">
+            <div id="loading-message" class="col-span-3 text-center text-gray-500 mt-8">Loading images...</div>
+            <div id="no-images-message" class="col-span-3 text-center text-gray-500 mt-8 hidden">No images to explore yet.</div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav bg-blue-900 text-white p-4 shadow-lg flex justify-around items-center rounded-t-lg">
+        <a href="home.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="search.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200 active:text-indigo-100">
+            <i class="fas fa-search text-xl"></i>
+            <span class="text-xs mt-1">Search</span>
+        </a>
+        <a href="create_content.html" class="flex flex-col items-center bg-indigo-600 p-3 rounded-full shadow-lg -mt-8 text-white hover:bg-indigo-700 transition-colors duration-200">
+            <i class="fas fa-plus text-xl"></i>
+        </a>
+        <a href="reels.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-video text-xl"></i>
+            <span class="text-xs mt-1">Reels</span>
+        </a>
+        <a href="messages.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-comments text-xl"></i>
+            <span class="text-xs mt-1">Messages</span>
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            onSnapshot, 
+            orderBy // For future use if needed, but not critical for basic grid
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
+            authDomain: "jiujs-social-media.firebaseapp.com",
+            projectId: "jiujs-social-media",
+            storageBucket: "jiujs-social-media.firebasestorage.app",
+            messagingSenderId: "828952698659",
+            appId: "1:828952698659:web:a75e23632ccce924eb3696",
+            measurementId: "G-4GDYQXMTR9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app); // Included for completeness
+
+        let userId = null;
+        let isAuthReady = false; // Flag to ensure auth is ready before fetching data
+        let allImages = []; // Store all fetched images for local filtering
+
+        // Get DOM elements
+        const imageGrid = document.getElementById('image-grid');
+        const loadingMessage = document.getElementById('loading-message');
+        const noImagesMessage = document.getElementById('no-images-message');
+        const searchInput = document.getElementById('search-input');
+
+        /**
+         * Renders a single image into the grid.
+         * @param {Object} imageData - The data for the image (should contain imageUrl).
+         * @param {string} imageId - The ID of the document.
+         */
+        function renderImage(imageData, imageId) {
+            const imgElement = document.createElement('img');
+            imgElement.src = imageData.imageUrl;
+            imgElement.alt = imageData.caption || 'Explore Image';
+            imgElement.className = 'w-full h-full object-cover'; // Tailwind for full cover
+            // Add error handling for broken image URLs
+            imgElement.onerror = function() {
+                this.onerror = null; // Prevents infinite loop if fallback also fails
+                this.src = 'https://placehold.co/300x300/e0e0e0/gray?text=Image+Error';
+            };
+            imageGrid.appendChild(imgElement);
+        }
+
+        /**
+         * Fetches and displays images from Firestore in real-time.
+         */
+        function fetchImages() {
+            if (!isAuthReady) {
+                console.log("Authentication not ready, cannot fetch images yet.");
+                return;
+            }
+
+            loadingMessage.classList.remove('hidden');
+            noImagesMessage.classList.add('hidden');
+            imageGrid.innerHTML = ''; // Clear existing images
+
+            const postsCollectionRef = collection(db, `artifacts/${appId}/public/data/posts`);
+            const q = query(postsCollectionRef);
+
+            onSnapshot(q, (snapshot) => {
+                loadingMessage.classList.add('hidden');
+                allImages = []; // Reset for new snapshot
+                if (snapshot.empty) {
+                    noImagesMessage.classList.remove('hidden');
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.imageUrl) { // Only add if it has an image
+                        allImages.push({ id: doc.id, ...data });
+                    }
+                });
+
+                // Sort posts by timestamp in JavaScript, descending
+                allImages.sort((a, b) => {
+                    const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+                    const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+                    return timeB - timeA;
+                });
+
+                displayFilteredImages(''); // Display all initially
+            }, (error) => {
+                console.error("Error fetching images for explore:", error);
+                loadingMessage.classList.add('hidden');
+                displayMessage('Failed to load explore images. Please try again later.', 'error');
+            });
+        }
+
+        /**
+         * Filters and displays images based on search input.
+         * This is a client-side filter.
+         * @param {string} searchTerm - The text to filter by.
+         */
+        function displayFilteredImages(searchTerm) {
+            imageGrid.innerHTML = ''; // Clear current grid
+
+            const filteredImages = allImages.filter(image => 
+                (image.caption && image.caption.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (image.userName && image.userName.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+
+            if (filteredImages.length === 0) {
+                noImagesMessage.classList.remove('hidden');
+            } else {
+                noImagesMessage.classList.add('hidden');
+                filteredImages.forEach(image => renderImage(image, image.id));
+            }
+        }
+
+        // Event Listener for Search Input
+        searchInput.addEventListener('input', (event) => {
+            displayFilteredImages(event.target.value);
+        });
+
+        /**
+         * Displays a temporary message (for debugging/feedback).
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success' or 'error').
+         */
+        function displayMessage(message, type) {
+            console.log(`Message (${type}): ${message}`);
+        }
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                displayMessage('Failed to initialize authentication. Some features might not work.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes and then fetch images
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed in with UID:', userId);
+                fetchImages();
+            } else {
+                userId = null;
+                isAuthReady = true; // Still ready, but user is anonymous/signed out
+                console.log('Auth state changed: User is signed out or anonymous.');
+                fetchImages(); // Fetch images even for anonymous users if security rules allow public read
+            }
+        });
+    </script>
+</body>
+</html>
+

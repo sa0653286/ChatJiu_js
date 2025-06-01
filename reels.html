@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - Reels</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background for content area */
+        }
+        .main-content {
+            flex-grow: 1;
+            overflow-y: scroll; /* Enable vertical scrolling for reels */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scroll-snap-type: y mandatory; /* Snap to each reel */
+            padding-bottom: 64px; /* Space for the bottom nav */
+            padding-top: 64px; /* Space for the top header */
+        }
+        .header, .bottom-nav {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+        .header {
+            top: 0;
+            left: 0;
+        }
+        .bottom-nav {
+            bottom: 0;
+            left: 0;
+        }
+        .reel-container {
+            width: 100%;
+            /* Calculate height to fill the screen between header and bottom nav */
+            height: calc(100vh - 64px - 64px); /* Full viewport height minus header and nav heights */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000; /* Black background for videos */
+            scroll-snap-align: start; /* Snap to the top of each reel */
+            position: relative; /* For caption positioning */
+        }
+        .reel-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensure video covers the container */
+        }
+        .reel-caption {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="header bg-blue-900 text-white p-4 shadow-md flex justify-between items-center rounded-b-lg">
+        <h1 class="text-2xl font-bold text-indigo-200">Jiu_js</h1>
+        <div class="flex items-center space-x-4">
+            <i class="fas fa-camera text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
+            <i class="fas fa-cog text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div id="reels-feed" class="flex flex-col">
+            <div id="loading-message" class="text-center text-gray-500 mt-8">Loading reels...</div>
+            <div id="no-reels-message" class="text-center text-gray-500 mt-8 hidden">No reels available yet. Be the first to upload!</div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav bg-blue-900 text-white p-4 shadow-lg flex justify-around items-center rounded-t-lg">
+        <a href="home.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="search.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-search text-xl"></i>
+            <span class="text-xs mt-1">Search</span>
+        </a>
+        <a href="create_content.html" class="flex flex-col items-center bg-indigo-600 p-3 rounded-full shadow-lg -mt-8 text-white hover:bg-indigo-700 transition-colors duration-200">
+            <i class="fas fa-plus text-xl"></i>
+        </a>
+        <a href="reels.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200 active:text-indigo-100">
+            <i class="fas fa-video text-xl"></i>
+            <span class="text-xs mt-1">Reels</span>
+        </a>
+        <a href="messages.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-comments text-xl"></i>
+            <span class="text-xs mt-1">Messages</span>
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            onSnapshot, 
+            orderBy 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
+            authDomain: "jiujs-social-media.firebaseapp.com",
+            projectId: "jiujs-social-media",
+            storageBucket: "jiujs-social-media.firebasestorage.app",
+            messagingSenderId: "828952698659",
+            appId: "1:828952698659:web:a75e23632ccce924eb3696",
+            measurementId: "G-4GDYQXMTR9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app); // Included for completeness
+
+        let userId = null;
+        let isAuthReady = false; // Flag to ensure auth is ready before fetching data
+
+        // Get DOM elements
+        const reelsFeed = document.getElementById('reels-feed');
+        const loadingMessage = document.getElementById('loading-message');
+        const noReelsMessage = document.getElementById('no-reels-message');
+
+        /**
+         * Renders a single reel video to the feed.
+         * @param {Object} reelData - The data for the reel (should contain videoUrl, caption, userName).
+         * @param {string} reelId - The ID of the reel document.
+         */
+        function renderReel(reelData, reelId) {
+            const reelContainer = document.createElement('div');
+            reelContainer.id = `reel-${reelId}`;
+            reelContainer.className = 'reel-container'; // Custom class for height and centering
+
+            const videoElement = document.createElement('video');
+            videoElement.src = reelData.videoUrl;
+            videoElement.loop = true;
+            videoElement.muted = true; // Muted for autoplay compatibility
+            videoElement.controls = true; // Allow user controls
+            videoElement.playsInline = true; // Important for mobile playback
+            videoElement.className = 'w-full h-full object-cover'; // Tailwind for full cover
+
+            // Fallback for broken video URLs
+            videoElement.onerror = function() {
+                this.onerror = null; // Prevents infinite loop
+                console.error(`Error loading video for reel ${reelId}: ${reelData.videoUrl}`);
+                // Replace with a placeholder image or message
+                const placeholder = document.createElement('div');
+                placeholder.className = 'w-full h-full bg-gray-700 flex items-center justify-center text-white text-sm';
+                placeholder.textContent = 'Video Not Available';
+                reelContainer.replaceChild(placeholder, videoElement);
+            };
+
+            const captionElement = document.createElement('div');
+            captionElement.className = 'reel-caption';
+            captionElement.innerHTML = `
+                <p class="font-semibold">${reelData.userName || 'Jiu_js User'}</p>
+                <p>${reelData.caption || ''}</p>
+            `;
+
+            reelContainer.appendChild(videoElement);
+            reelContainer.appendChild(captionElement);
+            reelsFeed.appendChild(reelContainer);
+
+            // Basic autoplay on load (might be restricted by browser policies)
+            videoElement.play().catch(error => {
+                console.warn("Autoplay prevented:", error);
+                // Inform user to tap to play if autoplay fails
+                // You could add a visible play button here
+            });
+        }
+
+        /**
+         * Fetches and displays reels from Firestore in real-time.
+         */
+        function fetchReels() {
+            if (!isAuthReady) {
+                console.log("Authentication not ready, cannot fetch reels yet.");
+                return;
+            }
+
+            loadingMessage.classList.remove('hidden');
+            noReelsMessage.classList.add('hidden');
+            reelsFeed.innerHTML = ''; // Clear existing reels
+
+            const reelsCollectionRef = collection(db, `artifacts/${appId}/public/data/reels`);
+            // Order by timestamp to show newest reels first
+            const q = query(reelsCollectionRef, orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                loadingMessage.classList.add('hidden');
+                if (snapshot.empty) {
+                    noReelsMessage.classList.remove('hidden');
+                    return;
+                }
+
+                reelsFeed.innerHTML = ''; // Clear before re-rendering
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.videoUrl) { // Only render if video URL exists
+                        renderReel(data, doc.id);
+                    }
+                });
+            }, (error) => {
+                console.error("Error fetching reels:", error);
+                loadingMessage.classList.add('hidden');
+                displayMessage('Failed to load reels. Please try again later.', 'error');
+            });
+        }
+
+        /**
+         * Displays a temporary message (for debugging/feedback).
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success' or 'error').
+         */
+        function displayMessage(message, type) {
+            console.log(`Message (${type}): ${message}`);
+        }
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                displayMessage('Failed to initialize authentication. Some features might not work.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes and then fetch reels
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed in with UID:', userId);
+                fetchReels();
+            } else {
+                userId = null;
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed out or anonymous.');
+                fetchReels(); // Fetch reels even for anonymous users if security rules allow public read
+            }
+        });
+
+        // Optional: Intersection Observer for more controlled autoplay/pause on scroll
+        // This is a more advanced feature and might be too complex for a single HTML file,
+        // but it's how TikTok-like apps manage video playback.
+        // const observer = new IntersectionObserver((entries) => {
+        //     entries.forEach(entry => {
+        //         const video = entry.target.querySelector('video');
+        //         if (video) {
+        //             if (entry.isIntersecting) {
+        //                 video.play().catch(e => console.log("Autoplay prevented:", e));
+        //             } else {
+        //                 video.pause();
+        //             }
+        //         }
+        //     });
+        // }, { threshold: 0.75 }); // Trigger when 75% of the reel is visible
+
+        // // Call this after reels are rendered
+        // function observeReels() {
+        //     document.querySelectorAll('.reel-container').forEach(reel => {
+        //         observer.observe(reel);
+        //     });
+        // }
+        // // Call observeReels() after reelsFeed.innerHTML = ''; and after forEach loop in onSnapshot
+    </script>
+</body>
+</html>
+

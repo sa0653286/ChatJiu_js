@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background for content area */
+            /* Adjust padding on the body to prevent content from going under fixed header/footer */
+            padding-top: 64px; /* Space for the top header (assuming 64px height) */
+            padding-bottom: 64px; /* Space for the bottom nav (assuming 64px height) */
+        }
+        .main-content {
+            flex-grow: 1;
+            /* Removed overflow-y: auto and explicit padding-top/bottom as body handles scrolling and padding */
+            padding: 1rem; /* Standard padding for content inside main */
+        }
+        .header, .bottom-nav {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            /* Explicit height for consistent padding on body */
+            height: 64px;
+            display: flex; /* Ensure these are flex for internal alignment */
+            align-items: center; /* Vertically center content */
+            padding: 0 1rem; /* Adjust padding for fixed elements */
+        }
+        .header {
+            top: 0;
+            left: 0;
+            justify-content: space-between; /* For header, space between items */
+            border-bottom-left-radius: 0.5rem; /* rounded-b-lg */
+            border-bottom-right-radius: 0.5rem; /* rounded-b-lg */
+        }
+        .bottom-nav {
+            bottom: 0;
+            left: 0;
+            justify-content: space-around; /* For bottom nav, space items evenly */
+            border-top-left-radius: 0.5rem; /* rounded-t-lg */
+            border-top-right-radius: 0.5rem; /* rounded-t-lg */
+        }
+
+        /* Webkit Scrollbar Styling for stories (optional but improves aesthetics) */
+        .story-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .story-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .story-scroll-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .story-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="header bg-blue-900 text-white shadow-md rounded-b-lg">
+        <h1 class="text-2xl font-bold text-indigo-200">Jiu_js</h1>
+        <div class="flex items-center space-x-4">
+            <i class="fas fa-search text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
+            <a href="profile.html" class="text-indigo-300 hover:text-indigo-100">
+                <i class="fas fa-user-circle text-xl cursor-pointer"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6 flex items-center space-x-4 overflow-x-auto story-scroll-container">
+            <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs border-2 border-indigo-500">Your Story</div>
+            <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs border-2 border-gray-300">Story 1</div>
+            <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs border-2 border-gray-300">Story 2</div>
+            <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs border-2 border-gray-300">Story 3</div>
+            <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs border-2 border-gray-300">Story 4</div>
+        </div>
+
+        <div id="posts-feed" class="space-y-6">
+            <div id="loading-message" class="text-center text-gray-500 mt-8">Loading posts...</div>
+            <div id="no-posts-message" class="text-center text-gray-500 mt-8 hidden">No posts available yet. Be the first to share!</div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav bg-blue-900 text-white shadow-lg rounded-t-lg">
+        <a href="home.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="search.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-search text-xl"></i>
+            <span class="text-xs mt-1">Search</span>
+        </a>
+        <a href="create_content.html" class="flex flex-col items-center bg-indigo-600 p-3 rounded-full shadow-lg -mt-8 text-white hover:bg-indigo-700 transition-colors duration-200">
+            <i class="fas fa-plus text-xl"></i>
+        </a>
+        <a href="reels.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-video text-xl"></i>
+            <span class="text-xs mt-1">Reels</span>
+        </a>
+        <a href="messages.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-comments text-xl"></i>
+            <span class="text-xs mt-1">Messages</span>
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            query,
+            onSnapshot,
+            // orderBy, // Commented out orderBy to avoid index issues, will sort in JS
+            limit
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
+            authDomain: "jiujs-social-media.firebaseapp.com",
+            projectId: "jiujs-social-media",
+            storageBucket: "jiujs-social-media.firebasestorage.app",
+            messagingSenderId: "828952698659",
+            appId: "1:828952698659:web:a75e23632ccce924eb3696",
+            measurementId: "G-4GDYQXMTR9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; // Corrected variable name
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app); // Included for completeness, not directly used here
+
+        let userId = null;
+        let isAuthReady = false; // Flag to ensure auth is ready before fetching data
+
+        // Get DOM elements
+        const postsFeed = document.getElementById('posts-feed');
+        const loadingMessage = document.getElementById('loading-message');
+        const noPostsMessage = document.getElementById('no-posts-message');
+
+        /**
+         * Renders a single post to the feed.
+         * @param {Object} postData - The data for the post.
+         * @param {string} postId - The ID of the post document.
+         */
+        function renderPost(postData, postId) {
+            const postElement = document.createElement('div');
+            postElement.id = `post-${postId}`;
+            postElement.className = 'bg-white rounded-lg shadow-md overflow-hidden';
+
+            // Placeholder for user avatar and name
+            const userName = postData.userName || 'Jiu_js User'; // Use displayName if available, else default
+            const userAvatar = postData.userAvatar || 'https://placehold.co/40x40/e0e0e0/gray?text=U';
+
+            postElement.innerHTML = `
+                <div class="flex items-center p-4">
+                    <img src="${userAvatar}" alt="User Avatar" class="w-10 h-10 rounded-full mr-3 border-2 border-indigo-500">
+                    <span class="font-semibold text-gray-800">${userName}</span>
+                </div>
+                <img src="${postData.imageUrl}" alt="Post Image" class="w-full h-auto object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/e0e0e0/gray?text=Image+Not+Found';">
+                <div class="p-4">
+                    <p class="text-gray-800 mb-2">${postData.caption || ''}</p>
+                    <div class="flex items-center space-x-4 text-gray-500">
+                        <button class="flex items-center space-x-1 hover:text-indigo-600 transition-colors duration-200 cursor-pointer">
+                            <i class="far fa-heart"></i>
+                            <span>Like</span>
+                        </button>
+                        <button class="flex items-center space-x-1 hover:text-indigo-600 transition-colors duration-200 cursor-pointer">
+                            <i class="far fa-comment"></i>
+                            <span>Comment</span>
+                        </button>
+                        <button class="flex items-center space-x-1 hover:text-indigo-600 transition-colors duration-200 cursor-pointer">
+                            <i class="far fa-share-square"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">${postData.timestamp ? new Date(postData.timestamp.toDate()).toLocaleString() : 'Just now'}</p>
+                </div>
+            `;
+            postsFeed.prepend(postElement); // Add new posts to the top
+        }
+
+        /**
+         * Fetches and displays posts from Firestore in real-time.
+         */
+        function fetchPosts() {
+            if (!isAuthReady) {
+                console.log("Authentication not ready, cannot fetch posts yet.");
+                return;
+            }
+
+            loadingMessage.classList.remove('hidden');
+            noPostsMessage.classList.add('hidden');
+            postsFeed.innerHTML = ''; // Clear existing posts before loading new ones
+
+            const postsCollectionRef = collection(db, `artifacts/${appId}/public/data/posts`);
+            const q = query(postsCollectionRef); // Removed orderBy to avoid index issues, will sort in JS
+
+            onSnapshot(q, (snapshot) => {
+                loadingMessage.classList.add('hidden');
+                if (snapshot.empty) {
+                    noPostsMessage.classList.remove('hidden');
+                    return;
+                }
+
+                const posts = [];
+                snapshot.forEach((doc) => {
+                    posts.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort posts by timestamp in JavaScript, descending
+                posts.sort((a, b) => {
+                    const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+                    const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+                    return timeB - timeA;
+                });
+
+                postsFeed.innerHTML = ''; // Clear before re-rendering sorted posts
+                posts.forEach(post => renderPost(post, post.id));
+            }, (error) => {
+                console.error("Error fetching posts:", error);
+                loadingMessage.classList.add('hidden');
+                displayMessage('Failed to load posts. Please try again later.', 'error');
+            });
+        }
+
+        /**
+         * Displays a message in the message box (if one existed, for consistency).
+         * For the home page, this might be less critical but good for debugging.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success' or 'error').
+         */
+        function displayMessage(message, type) {
+            console.log(`Message (${type}): ${message}`);
+        }
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                displayMessage('Failed to initialize authentication. Some features might not work.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes and then fetch posts
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed in with UID:', userId);
+                fetchPosts(); // Fetch posts only after authentication is ready
+            } else {
+                userId = null;
+                isAuthReady = true; // Still ready, but user is anonymous/signed out
+                console.log('Auth state changed: User is signed out or anonymous.');
+                fetchPosts(); // Fetch posts even for anonymous users if security rules allow public read
+            }
+        });
+    </script>
+</body>
+</html>
+

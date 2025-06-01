@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background for content area */
+        }
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Enable scrolling for content */
+            padding-bottom: 64px; /* Space for the bottom nav */
+            padding-top: 64px; /* Space for the top header */
+        }
+        .header, .bottom-nav {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+        .header {
+            top: 0;
+            left: 0;
+        }
+        .bottom-nav {
+            bottom: 0;
+            left: 0;
+        }
+        .profile-image-grid img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            aspect-ratio: 1 / 1; /* Ensure square images */
+        }
+        /* Custom message box for alerts */
+        #message-box {
+            position: fixed;
+            top: 70px; /* Below header */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #message-box.success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+        }
+        #message-box.error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="message-box" class="hidden"></div>
+
+    <header class="header bg-blue-900 text-white p-4 shadow-md flex justify-between items-center rounded-b-lg">
+        <button id="back-button" class="text-xl text-indigo-300 cursor-pointer hover:text-indigo-100">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-2xl font-bold text-indigo-200" id="profile-header-username">Profile</h1>
+        <div class="flex items-center space-x-4">
+            <i class="fas fa-ellipsis-v text-xl text-indigo-300 cursor-pointer hover:text-indigo-100" id="more-options-button"></i>
+        </div>
+    </header>
+
+    <main class="main-content p-4">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+            <img id="profile-avatar" src="https://placehold.co/100x100/e0e0e0/gray?text=U" alt="Profile Avatar" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-indigo-500">
+            <h2 id="profile-display-name" class="text-2xl font-bold text-gray-800 mb-2">Loading User...</h2>
+            <p id="profile-user-id" class="text-sm text-gray-500 mb-4 break-words"></p> <div class="flex justify-around items-center mb-6">
+                <div class="text-center">
+                    <span class="block font-bold text-lg text-gray-800" id="posts-count">0</span>
+                    <span class="text-gray-600 text-sm">Posts</span>
+                </div>
+                <div class="text-center">
+                    <span class="block font-bold text-lg text-gray-800" id="followers-count">0</span>
+                    <span class="text-gray-600 text-sm">Followers</span>
+                </div>
+                <div class="text-center">
+                    <span class="block font-bold text-lg text-gray-800" id="following-count">0</span>
+                    <span class="text-gray-600 text-sm">Following</span>
+                </div>
+            </div>
+
+            <div id="profile-actions" class="flex space-x-2 justify-center">
+                <button id="follow-unfollow-button" class="flex-1 bg-indigo-600 text-white p-2 rounded-md font-semibold hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hidden">
+                    Follow
+                </button>
+                <button id="message-button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md font-semibold hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 hidden">
+                    Message
+                </button>
+                <button id="report-button" class="flex-1 bg-red-600 text-white p-2 rounded-md font-semibold hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 hidden">
+                    Report
+                </button>
+                <button id="edit-profile-button" class="flex-1 bg-indigo-600 text-white p-2 rounded-md font-semibold hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hidden">
+                    Edit Profile
+                </button>
+            </div>
+        </div>
+
+        <div class="text-xl font-bold text-gray-800 mb-4">Posts</div>
+        <div id="user-posts-grid" class="grid grid-cols-3 gap-1">
+            <div id="loading-posts-message" class="col-span-3 text-center text-gray-500 mt-8">Loading posts...</div>
+            <div id="no-user-posts-message" class="col-span-3 text-center text-gray-500 mt-8 hidden">No posts available from this user.</div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav bg-blue-900 text-white p-4 shadow-lg flex justify-around items-center rounded-t-lg">
+        <a href="home.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="search.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-search text-xl"></i>
+            <span class="text-xs mt-1">Search</span>
+        </a>
+        <a href="create_content.html" class="flex flex-col items-center bg-indigo-600 p-3 rounded-full shadow-lg -mt-8 text-white hover:bg-indigo-700 transition-colors duration-200">
+            <i class="fas fa-plus text-xl"></i>
+        </a>
+        <a href="reels.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-video text-xl"></i>
+            <span class="text-xs mt-1">Reels</span>
+        </a>
+        <a href="messages.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-comments text-xl"></i>
+            <span class="text-xs mt-1">Messages</span>
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            onSnapshot, 
+            where, 
+            doc, 
+            getDoc,
+            setDoc,
+            deleteDoc,
+            Timestamp, // Import Timestamp for setting follow date
+            orderBy // Import orderBy for sorting
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
+            authDomain: "jiujs-social-media.firebaseapp.com",
+            projectId: "jiujs-social-media",
+            storageBucket: "jiujs-social-media.firebasestorage.app",
+            messagingSenderId: "828952698659",
+            appId: "1:828952698659:web:a75e23632ccce924eb3696",
+            measurementId: "G-4GDYQXMTR9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app); // Included for completeness
+
+        let currentLoggedInUserId = null; // The ID of the user currently logged in
+        let targetUserId = null; // The ID of the user whose profile is being viewed
+        let isAuthReady = false; // Flag to ensure auth is ready before fetching data
+        let isFollowing = false; // State for follow button
+
+        // Get DOM elements
+        const profileHeaderUsername = document.getElementById('profile-header-username');
+        const profileAvatar = document.getElementById('profile-avatar');
+        const profileDisplayName = document.getElementById('profile-display-name');
+        const profileUserIdDisplay = document.getElementById('profile-user-id');
+        const postsCountSpan = document.getElementById('posts-count');
+        const followersCountSpan = document.getElementById('followers-count');
+        const followingCountSpan = document.getElementById('following-count');
+        const followUnfollowButton = document.getElementById('follow-unfollow-button');
+        const messageButton = document.getElementById('message-button');
+        const reportButton = document.getElementById('report-button');
+        const editProfileButton = document.getElementById('edit-profile-button');
+        const userPostsGrid = document.getElementById('user-posts-grid');
+        const loadingPostsMessage = document.getElementById('loading-posts-message');
+        const noUserPostsMessage = document.getElementById('no-user-posts-message');
+        const backButton = document.getElementById('back-button');
+        const moreOptionsButton = document.getElementById('more-options-button');
+        const messageBox = document.getElementById('message-box');
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success' or 'error').
+         */
+        function displayMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Apply base and type classes
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Parses URL parameters to get the target user ID.
+         * @returns {string|null} The target user ID or null if not found.
+         */
+        function getTargetUserIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('userId');
+        }
+
+        /**
+         * Updates the profile header with user information.
+         * @param {Object} userData - The data for the user whose profile is being viewed.
+         * @param {string} userIdToDisplay - The actual UID of the user being displayed.
+         */
+        function updateProfileHeader(userData, userIdToDisplay) {
+            if (userData) {
+                profileHeaderUsername.textContent = userData.displayName || 'Profile';
+                profileDisplayName.textContent = userData.displayName || 'Jiu_js User';
+                profileUserIdDisplay.textContent = `User ID: ${userIdToDisplay}`; // Display the full target userId
+                profileAvatar.src = userData.photoURL || `https://placehold.co/100x100/e0e0e0/gray?text=${userData.displayName ? userData.displayName.charAt(0).toUpperCase() : 'U'}`;
+            } else {
+                profileHeaderUsername.textContent = 'Profile';
+                profileDisplayName.textContent = 'User Not Found';
+                profileUserIdDisplay.textContent = 'This profile does not exist or cannot be loaded.';
+                profileAvatar.src = 'https://placehold.co/100x100/e0e0e0/gray?text=U';
+            }
+        }
+
+        /**
+         * Renders a single post image into the user's grid.
+         * @param {Object} postData - The data for the post (should contain imageUrl).
+         * @param {string} postId - The ID of the post document.
+         */
+        function renderUserPost(postData, postId) {
+            const imgElement = document.createElement('img');
+            imgElement.src = postData.imageUrl;
+            imgElement.alt = postData.caption || 'User Post';
+            imgElement.className = 'w-full h-full object-cover'; // Tailwind for full cover
+            // Add error handling for broken image URLs
+            imgElement.onerror = function() {
+                this.onerror = null; // Prevents infinite loop if fallback also fails
+                this.src = 'https://placehold.co/300x300/e0e0e0/gray?text=Image+Error';
+            };
+            userPostsGrid.appendChild(imgElement);
+        }
+
+        /**
+         * Fetches and displays posts uploaded by the target user from Firestore in real-time.
+         */
+        function fetchTargetUserPosts() {
+            if (!isAuthReady || !targetUserId) {
+                console.log("Authentication not ready or target user ID not set, cannot fetch posts.");
+                loadingPostsMessage.classList.add('hidden');
+                noUserPostsMessage.classList.remove('hidden');
+                noUserPostsMessage.textContent = 'Cannot load posts for this profile.';
+                return;
+            }
+
+            loadingPostsMessage.classList.remove('hidden');
+            noUserPostsMessage.classList.add('hidden');
+            userPostsGrid.innerHTML = ''; // Clear existing posts
+
+            const postsCollectionRef = collection(db, `artifacts/${appId}/public/data/posts`);
+            // Query posts where 'userId' field matches the target user's ID
+            const q = query(postsCollectionRef, where('userId', '==', targetUserId), orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                loadingPostsMessage.classList.add('hidden');
+                if (snapshot.empty) {
+                    noUserPostsMessage.classList.remove('hidden');
+                    noUserPostsMessage.textContent = 'No posts available from this user.';
+                    postsCountSpan.textContent = 0; // Update posts count
+                    return;
+                }
+
+                userPostsGrid.innerHTML = ''; // Clear before re-rendering
+                let postCount = 0;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.imageUrl) { // Only render if it has an image
+                        renderUserPost(data, doc.id);
+                        postCount++;
+                    }
+                });
+                postsCountSpan.textContent = postCount; // Update posts count
+            }, (error) => {
+                console.error("Error fetching target user posts:", error);
+                loadingPostsMessage.classList.add('hidden');
+                displayMessage('Failed to load posts for this profile. Please try again later.', 'error');
+            });
+        }
+
+        /**
+         * Checks if the current logged-in user is following the target user.
+         */
+        async function checkIfFollowing() {
+            if (!currentLoggedInUserId || !targetUserId || currentLoggedInUserId === targetUserId) {
+                isFollowing = false; // Cannot follow self or if not logged in
+                return;
+            }
+            try {
+                const followDocRef = doc(db, `artifacts/${appId}/users/${currentLoggedInUserId}/following`, targetUserId);
+                const followDocSnap = await getDoc(followDocRef);
+                isFollowing = followDocSnap.exists();
+            } catch (error) {
+                console.error("Error checking follow status:", error);
+                isFollowing = false; // Default to not following on error
+            }
+            updateFollowButton();
+        }
+
+        /**
+         * Updates the text and style of the follow/unfollow button.
+         */
+        function updateFollowButton() {
+            if (currentLoggedInUserId === targetUserId) {
+                followUnfollowButton.classList.add('hidden'); // Hide follow button for own profile
+                editProfileButton.classList.remove('hidden'); // Show edit profile button for own profile
+                messageButton.classList.add('hidden'); // Hide message button for own profile
+                reportButton.classList.add('hidden'); // Hide report button for own profile
+            } else {
+                followUnfollowButton.classList.remove('hidden'); // Show follow button for other profiles
+                editProfileButton.classList.add('hidden'); // Hide edit profile button for other profiles
+                messageButton.classList.remove('hidden'); // Show message button for other profiles
+                reportButton.classList.remove('hidden'); // Show report button for other profiles
+
+                if (isFollowing) {
+                    followUnfollowButton.textContent = 'Unfollow';
+                    followUnfollowButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                    followUnfollowButton.classList.add('bg-gray-400', 'hover:bg-gray-500');
+                } else {
+                    followUnfollowButton.textContent = 'Follow';
+                    followUnfollowButton.classList.remove('bg-gray-400', 'hover:bg-gray-500');
+                    followUnfollowButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                }
+            }
+        }
+
+       
+          
+        /**
+         * Handles the follow/unfollow action.
+         */
+        async function handleFollowUnfollow() {
+            if (!currentLoggedInUserId || !targetUserId || currentLoggedInUserId === targetUserId) {
+                displayMessage('You must be logged in to follow/unfollow, and cannot follow yourself.', 'error');
+                return;
+            }
+
+            const followDocRef = doc(db, `artifacts/${appId}/users/${currentLoggedInUserId}/following`, targetUserId);
+
+            try {
+                if (isFollowing) {
+                    await deleteDoc(followDocRef);
+                    displayMessage(`Unfollowed ${profileDisplayName.textContent}`, 'success');
+                } else {
+                    await setDoc(followDocRef, { followedAt: Timestamp.now() });
+                    displayMessage(`Following ${profileDisplayName.textContent}`, 'success');
+                }
+                isFollowing = !isFollowing; // Toggle state
+                updateFollowButton(); // Update UI
+            } catch (error) {
+                console.error("Error performing follow/unfollow:", error);
+                displayMessage('Failed to update follow status. Please try again.', 'error');
+            }
+        }
+
+        // Event Listeners
+        followUnfollowButton.addEventListener('click', handleFollowUnfollow);
+
+        messageButton.addEventListener('click', () => {
+            if (targetUserId) {
+                displayMessage(`Simulating navigation to chat with ${profileDisplayName.textContent}.`, 'success');
+                console.log(`Maps to /chat?userId=${targetUserId}`);
+                // In a full app: window.location.href = `chat.html?userId=${targetUserId}`;
+            } else {
+                displayMessage('Cannot message: Target user not identified.', 'error');
+            }
+        });
+
+        reportButton.addEventListener('click', () => {
+            if (targetUserId) {
+                displayMessage(`Simulating reporting ${profileDisplayName.textContent}.`, 'success');
+                console.log(`Report user: ${targetUserId}`);
+                // In a real app, this would open a modal or send data to a backend for review.
+            } else {
+                displayMessage('Cannot report: Target user not identified.', 'error');
+            }
+        });
+
+        editProfileButton.addEventListener('click', () => {
+            displayMessage('Edit Profile functionality would be implemented here.', 'success');
+            console.log('Simulating Edit Profile action.');
+        });
+
+        backButton.addEventListener('click', () => {
+            window.history.back(); // Go back to the previous page
+        });
+
+        moreOptionsButton.addEventListener('click', () => {
+            displayMessage('More options for this profile would appear here (e.g., share profile, block).', 'success');
+            console.log('Simulating More Options action.');
+        });
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                displayMessage('Failed to initialize authentication. Some features might not work.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes and then fetch profile data and posts
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentLoggedInUserId = user.uid;
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed in with UID:', currentLoggedInUserId);
+
+                // Determine the target user ID
+                const urlUserId = getTargetUserIdFromUrl();
+                targetUserId = urlUserId || currentLoggedInUserId; // If no ID in URL, show current user's profile
+
+                // Fetch target user's public profile data
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, targetUserId);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    updateProfileHeader(userDocSnap.data(), targetUserId);
+                } else {
+                    updateProfileHeader(null, targetUserId); // User not found
+                    displayMessage('User profile not found.', 'error');
+                }
+
+                // Check follow status and update buttons
+                await checkIfFollowing();
+                updateFollowButton(); // Ensure buttons are updated after auth and follow check
+
+                // Fetch posts for the target user
+                fetchTargetUserPosts();
+            } else {
+                currentLoggedInUserId = null;
+                isAuthReady = true; // Auth is ready, but user is anonymous/signed out
+                console.log('Auth state changed: User is signed out or anonymous.');
+                
+                // If not logged in, we can't perform follow/message/report actions.
+                // We can still try to display a profile if a targetUserId is in the URL.
+                targetUserId = getTargetUserIdFromUrl();
+                if (targetUserId) {
+                    const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, targetUserId);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        updateProfileHeader(userDocSnap.data(), targetUserId);
+                    } else {
+                        updateProfileHeader(null, targetUserId);
+                        displayMessage('User profile not found.', 'error');
+                    }
+                    fetchTargetUserPosts(); // Still try to fetch public posts
+                } else {
+                    // No user logged in and no target user specified in URL
+                    updateProfileHeader(null, 'N/A');
+                    noUserPostsMessage.classList.remove('hidden');
+                    noUserPostsMessage.textContent = 'Please sign in to view profiles.';
+                    followUnfollowButton.classList.add('hidden');
+                    messageButton.classList.add('hidden');
+                    reportButton.classList.add('hidden');
+                    editProfileButton.classList.add('hidden');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

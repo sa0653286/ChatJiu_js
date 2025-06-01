@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f3f4f6; /* Light gray background for content area */
+        }
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Enable scrolling for content */
+            padding-bottom: 64px; /* Space for the bottom nav */
+            padding-top: 64px; /* Space for the top header */
+        }
+        .header, .bottom-nav {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+        .header {
+            top: 0;
+            left: 0;
+        }
+        .bottom-nav {
+            bottom: 0;
+            left: 0;
+        }
+        /* Custom shadow for a bit more depth */
+        .shadow-md-custom {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Profile image upload area */
+        .avatar-upload-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1rem;
+        }
+        .avatar-upload-container input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .avatar-upload-container:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+
+        /* Custom message box for alerts */
+        #message-box {
+            position: fixed;
+            top: 70px; /* Below header */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #message-box.success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+        }
+        #message-box.error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+        }
+        #message-box.info {
+            background-color: #bfdbfe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="message-box" class="hidden"></div>
+
+    <header class="header bg-blue-900 text-white p-4 shadow-md-custom flex justify-between items-center rounded-b-lg">
+        <button id="back-button" class="text-xl text-indigo-300 cursor-pointer hover:text-indigo-100">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="text-2xl font-bold text-indigo-200">Edit Profile</h1>
+        <div class="w-6"></div> </header>
+
+    <main class="main-content p-4">
+        <div class="bg-white rounded-lg shadow-md-custom p-6 mb-6 text-center">
+            <div class="avatar-upload-container">
+                <img id="profile-avatar" src="https://placehold.co/100x100/e0e0e0/gray?text=U" alt="Profile Avatar" class="w-24 h-24 rounded-full object-cover border-4 border-indigo-500 shadow-sm">
+                <input type="file" id="avatar-upload-input" accept="image/*">
+                <div class="avatar-upload-overlay">
+                    <i class="fas fa-camera"></i>
+                </div>
+            </div>
+
+            <p id="profile-user-id" class="text-sm text-gray-500 mb-4 break-words px-4">User ID: Loading...</p>
+
+            <div class="mb-4 text-left">
+                <label for="display-name-input" class="block text-gray-700 text-sm font-bold mb-2">Display Name:</label>
+                <input type="text" id="display-name-input" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-indigo-500" placeholder="Your Display Name">
+            </div>
+
+            <button id="save-profile-button" class="bg-indigo-600 text-white p-2 rounded-md w-full font-semibold hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                Save Changes
+            </button>
+            <div id="loading-indicator" class="hidden mt-4 text-indigo-600 font-semibold">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Saving...
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav bg-blue-900 text-white p-4 shadow-lg flex justify-around items-center rounded-t-lg">
+        <a href="home.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="search.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-search text-xl"></i>
+            <span class="text-xs mt-1">Search</span>
+        </a>
+        <a href="create_content.html" class="flex flex-col items-center bg-indigo-600 p-3 rounded-full shadow-lg -mt-8 text-white hover:bg-indigo-700 transition-colors duration-200">
+            <i class="fas fa-plus text-xl"></i>
+        </a>
+        <a href="reels.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-video text-xl"></i>
+            <span class="text-xs mt-1">Reels</span>
+        </a>
+        <a href="messages.html" class="flex flex-col items-center text-indigo-300 hover:text-indigo-100 transition-colors duration-200">
+            <i class="fas fa-comments text-xl"></i>
+            <span class="text-xs mt-1">Messages</span>
+        </a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            updateProfile // Import updateProfile for Auth profile updates
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc // Use setDoc to overwrite or create user profile
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import {
+            getStorage,
+            ref,
+            uploadBytes,
+            getDownloadURL
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
+            authDomain: "jiujs-social-media.firebaseapp.com",
+            projectId: "jiujs-social-media",
+            storageBucket: "jiujs-social-media.firebasestorage.app",
+            messagingSenderId: "828952698659",
+            appId: "1:828952698659:web:a75e23632ccce924eb3696",
+            measurementId: "G-4GDYQXMTR9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let currentUserId = null;
+        let isAuthReady = false;
+        let selectedFile = null; // To store the file selected for upload
+
+        // Get DOM elements
+        const profileAvatar = document.getElementById('profile-avatar');
+        const avatarUploadInput = document.getElementById('avatar-upload-input');
+        const profileUserIdDisplay = document.getElementById('profile-user-id');
+        const displayNameInput = document.getElementById('display-name-input');
+        const saveProfileButton = document.getElementById('save-profile-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const backButton = document.getElementById('back-button');
+        const messageBox = document.getElementById('message-box'); // Get the message box element
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success', 'error', 'info').
+         */
+        function displayMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Apply base and type classes
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Loads the current user's profile data into the form fields.
+         */
+        async function loadUserProfile() {
+            if (!currentUserId) {
+                displayMessage('User not logged in.', 'error');
+                return;
+            }
+
+            try {
+                // Fetch from Firestore public data for users
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, currentUserId);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    displayNameInput.value = userData.displayName || '';
+                    profileAvatar.src = userData.photoURL || `https://placehold.co/100x100/e0e0e0/gray?text=${userData.displayName ? userData.displayName.charAt(0).toUpperCase() : 'U'}`;
+                } else {
+                    // If no public profile exists, use Firebase Auth data
+                    const user = auth.currentUser;
+                    if (user) {
+                        displayNameInput.value = user.displayName || '';
+                        profileAvatar.src = user.photoURL || `https://placehold.co/100x100/e0e0e0/gray?text=${user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}`;
+                    }
+                    displayMessage('No existing profile found. Creating a new one on save.', 'info');
+                }
+                profileUserIdDisplay.textContent = `User ID: ${currentUserId}`;
+            } catch (error) {
+                console.error("Error loading user profile:", error);
+                displayMessage('Failed to load profile data.', 'error');
+            }
+        }
+
+        /**
+         * Handles the saving of profile changes, including image upload.
+         */
+        async function saveProfileChanges() {
+            console.log("Save button clicked. Starting saveProfileChanges...");
+
+            if (!currentUserId) {
+                console.log("Error: currentUserId is null. User not logged in.");
+                displayMessage('You must be logged in to save changes.', 'error');
+                return;
+            }
+
+            const newDisplayName = displayNameInput.value.trim();
+            if (!newDisplayName) {
+                console.log("Error: Display Name is empty.");
+                displayMessage('Display Name cannot be empty.', 'error');
+                return;
+            }
+
+            saveProfileButton.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            let newPhotoURL = profileAvatar.src; // Default to current avatar URL
+            console.log(`Current Display Name: ${newDisplayName}, Current Photo URL: ${newPhotoURL}`);
+
+            try {
+                // 1. Upload new profile picture if selected
+                if (selectedFile) {
+                    displayMessage('Uploading profile picture...', 'info');
+                    console.log("Selected file detected. Attempting to upload...");
+                    const profilePicRef = ref(storage, `artifacts/${appId}/public/images/profile_pictures/${currentUserId}/${selectedFile.name}`);
+                    console.log("Storage reference created:", profilePicRef.fullPath);
+
+                    const uploadResult = await uploadBytes(profilePicRef, selectedFile);
+                    console.log("File uploaded successfully:", uploadResult);
+
+                    newPhotoURL = await getDownloadURL(uploadResult.ref);
+                    console.log("New photo URL obtained:", newPhotoURL);
+                    displayMessage('Profile picture uploaded!', 'success');
+                } else {
+                    console.log("No new file selected for upload.");
+                }
+
+                // 2. Update Firebase Authentication profile
+                console.log("Attempting to update Firebase Auth profile...");
+                await updateProfile(auth.currentUser, {
+                    displayName: newDisplayName,
+                    photoURL: newPhotoURL
+                });
+                console.log("Firebase Auth profile updated successfully.");
+
+                // 3. Update Firestore public user data
+                console.log("Attempting to update Firestore public user data...");
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, currentUserId);
+                console.log("Firestore document reference:", userDocRef.path);
+                await setDoc(userDocRef, {
+                    displayName: newDisplayName,
+                    photoURL: newPhotoURL,
+                    userId: currentUserId, // Ensure userId is stored in the document
+                    lastUpdated: new Date()
+                }, { merge: true }); // Use merge to avoid overwriting other fields
+                console.log("Firestore public user data updated successfully.");
+
+                displayMessage('Profile updated successfully!', 'success');
+                console.log("Profile save process completed successfully.");
+                // Optionally navigate back to profile page
+                // window.history.back();
+
+            } catch (error) {
+                console.error("Error saving profile:", error);
+                displayMessage(`Failed to save profile: ${error.message}`, 'error');
+            } finally {
+                saveProfileButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+                console.log("Save process finished. Button re-enabled, loading indicator hidden.");
+            }
+        }
+
+        // Event Listeners
+        avatarUploadInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profileAvatar.src = e.target.result; // Show preview
+                };
+                reader.readAsDataURL(selectedFile);
+                console.log("New file selected for avatar preview.");
+            }
+        });
+
+        saveProfileButton.addEventListener('click', saveProfileChanges);
+
+        backButton.addEventListener('click', () => {
+            window.history.back(); // Go back to the previous page
+        });
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                displayMessage('Failed to initialize authentication. Some features might not work.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes and then load profile data
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed in with UID:', currentUserId);
+                loadUserProfile(); // Load profile data once authenticated
+            } else {
+                currentUserId = null;
+                isAuthReady = true; // Auth is ready, but user is anonymous/signed out
+                console.log('Auth state changed: User is signed out or anonymous.');
+                displayMessage('Please sign in to edit your profile.', 'info');
+                // Clear form fields if not logged in
+                displayNameInput.value = '';
+                profileAvatar.src = 'https://placehold.co/100x100/e0e0e0/gray?text=U';
+                profileUserIdDisplay.textContent = 'User ID: N/A';
+                saveProfileButton.disabled = true; // Disable save button
+            }
+        });
+    </script>
+</body>
+</html>
+

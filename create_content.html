@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - Create New Post</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom styles for Inter font and general aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa; /* Light gray background, similar to Instagram */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+            margin: 0;
+            padding: 1rem; /* Add some padding for smaller screens */
+            box-sizing: border-box;
+        }
+        /* Hide default file input */
+        input[type="file"] {
+            display: none;
+        }
+        /* Style for the custom file input label */
+        .custom-file-upload {
+            display: inline-block;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            border-radius: 0.5rem; /* Rounded corners */
+            background-color: #38a169; /* Green for upload button */
+            color: white;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .custom-file-upload:hover {
+            background-color: #2f855a;
+        }
+        /* Ensure image preview fits well */
+        #media-preview {
+            max-width: 100%;
+            height: auto;
+            max-height: 300px; /* Limit height for better mobile display */
+            object-fit: contain; /* Ensure the image is contained within its box */
+            border-radius: 0.5rem;
+            display: none; /* Hidden by default */
+        }
+        /* Styling for the main card */
+        .post-card {
+            background-color: white;
+            border-radius: 1rem; /* More rounded corners for the card */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* Stronger shadow for depth */
+            width: 100%;
+            max-width: 480px; /* Max width for a typical Instagram post card */
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Spacing between sections */
+        }
+        /* Input and textarea styling */
+        input[type="text"], textarea {
+            border: 1px solid #e2e8f0; /* Light gray border */
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical; /* Allow vertical resizing for caption */
+        }
+        /* Button styling */
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn:active {
+            transform: translateY(1px); /* Slight press effect */
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* Instagram-like blue */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #cbd5e0; /* Light gray for secondary actions */
+            color: #4a5568;
+        }
+        .btn-secondary:hover {
+            background-color: #a0aec0;
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Red for cancel */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        /* Message box styling */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            max-width: 90%;
+            text-align: center;
+        }
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none; /* Hidden by default */
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="post-card">
+        <div class="flex justify-between items-center pb-4 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800">Create New Post</h2>
+        </div>
+
+        <div class="flex flex-col items-center justify-center p-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-blue-400 transition-colors duration-200" onclick="document.getElementById('file-input').click()">
+            <input type="file" id="file-input" accept="image/*,video/*" onchange="previewMedia(event)">
+            <img id="media-preview" src="#" alt="Media Preview" class="mb-4">
+            <p id="upload-text" class="text-gray-500 text-lg">Tap to upload photo or video</p>
+            <label for="file-input" class="custom-file-upload mt-4">
+                Choose File
+            </label>
+        </div>
+
+        <div>
+            <label for="caption" class="block text-gray-700 text-sm font-semibold mb-2">Caption</label>
+            <textarea id="caption" placeholder="Write a caption..." class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"></textarea>
+        </div>
+
+        <div>
+            <label for="location" class="block text-gray-700 text-sm font-semibold mb-2">Location (Optional)</label>
+            <input type="text" id="location" placeholder="Add location..." class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+
+        <div>
+            <label for="tags" class="block text-gray-700 text-sm font-semibold mb-2">Tag People (Optional)</label>
+            <input type="text" id="tags" placeholder="Tag friends, products..." class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-4">
+            <button id="save-draft-button" class="btn btn-secondary w-full sm:w-auto">Save Draft</button>
+            <button id="cancel-button" class="btn btn-danger w-full sm:w-auto">Cancel</button>
+            <button id="post-button" class="btn btn-primary w-full sm:w-auto">Post</button>
+        </div>
+        <div id="loading-spinner" class="loading-spinner mx-auto mt-4"></div>
+    </div>
+
+    <div class="message-box-overlay" id="message-box-overlay"></div>
+
+    <div class="message-box" id="message-box">
+        <p id="message-text" class="text-lg font-medium"></p>
+        <button onclick="hideMessage()" class="btn btn-primary">OK</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { 
+            getStorage, 
+            ref, 
+            uploadBytes, 
+            getDownloadURL 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "YOUR_API_KEY", // Replace with actual Firebase config if not in Canvas
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let currentUserId = null;
+        let currentUserName = 'Anonymous User'; // Default for anonymous users
+        let isAuthReady = false;
+
+        // Get DOM elements
+        const fileInput = document.getElementById('file-input');
+        const mediaPreview = document.getElementById('media-preview');
+        const uploadText = document.getElementById('upload-text');
+        const captionInput = document.getElementById('caption');
+        const locationInput = document.getElementById('location');
+        const tagsInput = document.getElementById('tags');
+        const saveDraftButton = document.getElementById('save-draft-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const postButton = document.getElementById('post-button');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageOverlay = document.getElementById('message-box-overlay');
+
+        // Determine the page to redirect back to
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromPage = urlParams.get('from') || 'home'; // Default to home if not specified
+
+        /**
+         * Redirects the user to the specified page.
+         * @param {string} pageName - The name of the page to redirect to (e.g., 'home', 'reels').
+         */
+        function redirectToPage(pageName) {
+            const pageMap = {
+                'home': 'home.html',
+                'search': 'search.html',
+                'reels': 'reels.html',
+                'messages': 'messages.html',
+                'profile': 'profile.html' // Assuming profile can also link here
+            };
+            window.location.href = pageMap[pageName] || 'home.html'; // Fallback to home
+        }
+
+        /**
+         * Shows the loading spinner and disables buttons.
+         */
+        function showLoading() {
+            loadingSpinner.style.display = 'block';
+            saveDraftButton.disabled = true;
+            cancelButton.disabled = true;
+            postButton.disabled = true;
+        }
+
+        /**
+         * Hides the loading spinner and enables buttons.
+         */
+        function hideLoading() {
+            loadingSpinner.style.display = 'none';
+            saveDraftButton.disabled = false;
+            cancelButton.disabled = false;
+            postButton.disabled = false;
+        }
+
+        /**
+         * Previews the selected image or video file.
+         * @param {Event} event The change event from the file input.
+         */
+        function previewMedia(event) {
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    mediaPreview.src = e.target.result;
+                    mediaPreview.style.display = 'block'; // Show the media
+                    uploadText.style.display = 'none'; // Hide the "Tap to upload" text
+
+                    // Set appropriate tag for video/image
+                    if (file.type.startsWith('image/')) {
+                        mediaPreview.tagName = 'IMG';
+                    } else if (file.type.startsWith('video/')) {
+                        mediaPreview.tagName = 'VIDEO';
+                        mediaPreview.controls = true;
+                        mediaPreview.loop = true;
+                        mediaPreview.muted = true;
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                mediaPreview.src = '#';
+                mediaPreview.style.display = 'none'; // Hide the media if no file selected
+                uploadText.style.display = 'block'; // Show the "Tap to upload" text
+            }
+        }
+
+        /**
+         * Displays a custom message box.
+         * @param {string} message The message to display.
+         * @param {string} type The type of message (e.g., 'success', 'error', 'info').
+         * @param {function} [callback] An optional function to call when the OK button is clicked.
+         */
+        function showMessage(message, type, callback) {
+            messageText.textContent = message;
+            // Optionally change text color based on type
+            messageText.className = 'text-lg font-medium'; // Reset classes
+            if (type === 'success') {
+                messageText.classList.add('text-green-600');
+            } else if (type === 'error') {
+                messageText.classList.add('text-red-600');
+            } else {
+                messageText.classList.add('text-gray-800');
+            }
+
+            messageBox.style.display = 'flex';
+            messageOverlay.style.display = 'block';
+
+            // Update OK button to include callback
+            const okButton = messageBox.querySelector('button');
+            okButton.onclick = () => {
+                hideMessage();
+                if (callback) {
+                    callback();
+                }
+            };
+        }
+
+        /**
+         * Hides the custom message box.
+         */
+        function hideMessage() {
+            messageBox.style.display = 'none';
+            messageOverlay.style.display = 'none';
+        }
+
+        /**
+         * Handles the post creation logic: uploads media and saves post data.
+         */
+        async function handlePost() {
+            if (!isAuthReady || !currentUserId) {
+                showMessage('You must be signed in to create a post.', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const caption = captionInput.value;
+            const location = locationInput.value;
+            const tags = tagsInput.value;
+
+            if (!file) {
+                showMessage('Please select a photo or video to post.', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Determine if it's an image or video and set collection/storage path accordingly
+                const isVideo = file.type.startsWith('video/');
+                const mediaType = isVideo ? 'reels' : 'posts'; // Use 'reels' for videos, 'posts' for images
+                const collectionName = `artifacts/${appId}/public/data/${mediaType}`;
+                const storagePath = `artifacts/${appId}/public/${mediaType}_media/${currentUserId}/${Date.now()}_${file.name}`;
+
+                const storageRef = ref(storage, storagePath);
+                const uploadResult = await uploadBytes(storageRef, file);
+                const mediaUrl = await getDownloadURL(uploadResult.ref);
+
+                const postData = {
+                    userId: currentUserId,
+                    userName: currentUserName, // Use the fetched user name
+                    caption: caption,
+                    location: location,
+                    tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag), // Split tags by comma
+                    timestamp: serverTimestamp(),
+                    mediaType: isVideo ? 'video' : 'image'
+                };
+
+                if (isVideo) {
+                    postData.videoUrl = mediaUrl;
+                } else {
+                    postData.imageUrl = mediaUrl;
+                }
+
+                await addDoc(collection(db, collectionName), postData);
+
+                showMessage('Your post has been shared!', 'success', () => redirectToPage(fromPage));
+                clearForm();
+
+            } catch (error) {
+                console.error("Error during post creation:", error);
+                showMessage(`Failed to share post: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Handles saving a draft. For now, it just shows a message and redirects.
+         * In a full implementation, it would save to a user-specific draft collection.
+         */
+        function handleSaveDraft() {
+            if (!isAuthReady || !currentUserId) {
+                showMessage('You must be signed in to save a draft.', 'error');
+                return;
+            }
+            // Implement actual draft saving to Firestore (e.g., in a private collection)
+            // For now, just show message and redirect
+            showMessage('Draft saved! (Feature to save to Firestore private collection coming soon)', 'info', () => redirectToPage(fromPage));
+        }
+
+        /**
+         * Handles cancelling the post creation.
+         */
+        function handleCancel() {
+            showMessage('Post creation cancelled.', 'info', () => redirectToPage(fromPage));
+        }
+
+        /**
+         * Clears the form fields.
+         */
+        function clearForm() {
+            fileInput.value = '';
+            mediaPreview.src = '#';
+            mediaPreview.style.display = 'none';
+            uploadText.style.display = 'block';
+            captionInput.value = '';
+            locationInput.value = '';
+            tagsInput.value = '';
+        }
+
+        // Event Listeners
+        saveDraftButton.addEventListener('click', handleSaveDraft);
+        cancelButton.addEventListener('click', handleCancel);
+        postButton.addEventListener('click', handlePost);
+        fileInput.addEventListener('change', previewMedia);
+
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                showMessage('Failed to initialize authentication. Some features might not work.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                currentUserName = user.displayName || `User_${user.uid.substring(0, 8)}`; // Use display name or part of UID
+                isAuthReady = true;
+                console.log('Auth state changed: User is signed in with UID:', currentUserId);
+            } else {
+                currentUserId = null;
+                currentUserName = 'Anonymous User';
+                isAuthReady = true; // Auth is ready, but user is anonymous/signed out
+                console.log('Auth state changed: User is signed out or anonymous.');
+                // For a create post page, you might want to prevent actions if not signed in fully
+                // Or allow anonymous posts if your security rules permit.
+            }
+        });
+    </script>
+</body>
+</html>
+

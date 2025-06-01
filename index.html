@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiu_js - Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the separator line */
+        .separator {
+            position: relative;
+            text-align: center;
+        }
+        .separator::before,
+        .separator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%; /* Adjust width as needed */
+            height: 1px;
+            background-color: #e0e0e0;
+        }
+        .separator::before {
+            left: 0;
+        }
+        .separator::after {
+            right: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-blue-900 flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-center text-4xl font-bold text-indigo-800 mb-2">Jiu_js</h1>
+        <p class="text-center text-gray-600 mb-6">Connect and share with friends</p>
+
+        <div id="message-box" class="mb-4 p-3 rounded-md text-sm hidden"></div>
+
+        <form id="signin-form">
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">Email address</label>
+                <input type="email" id="email" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter your email" required>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" id="signin-button" class="bg-indigo-600 text-white p-3 rounded-md w-full font-semibold hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                Sign in
+            </button>
+        </form>
+
+        <div class="separator my-8 text-gray-500 text-sm">OR CONTINUE WITH</div>
+
+        <button id="google-signin-button" class="bg-white border border-gray-300 text-gray-700 p-3 rounded-md w-full font-semibold flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" class="w-5 h-5">
+            <span>Continue with Google</span>
+        </button>
+
+        <p class="mt-6 text-center text-gray-600 text-sm">
+            Don't have an account? <a href="signup.html" id="signup-link" class="text-indigo-600 font-semibold hover:underline">Sign up</a>
+        </p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signInAnonymously,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
+            authDomain: "jiujs-social-media.firebaseapp.com",
+            projectId: "jiujs-social-media",
+            storageBucket: "jiujs-social-media.firebasestorage.app",
+            messagingSenderId: "828952698659",
+            appId: "1:828952698659:web:a75e23632ccce924eb3696",
+            measurementId: "G-4GDYQXMTR9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app); // Although not directly used in sign-in, it's part of the app's Firebase setup
+        const googleProvider = new GoogleAuthProvider();
+
+        let userId = null; // To store the current user's ID
+
+        // Get DOM elements
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const signinForm = document.getElementById('signin-form');
+        const googleSigninButton = document.getElementById('google-signin-button');
+        const messageBox = document.getElementById('message-box');
+        const signupLink = document.getElementById('signup-link');
+
+        // Define the home page URL
+        const HOME_PAGE_URL = 'index.html'; // Or 'home.html', 'dashboard.html', etc.
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success' or 'error').
+         */
+        function displayMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-800');
+            }
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Redirects to the home page.
+         */
+        function redirectToHomePage() {
+            window.location.href = HOME_PAGE_URL;
+        }
+
+        /**
+         * Handles email and password sign-in.
+         * @param {Event} event - The form submission event.
+         */
+        async function handleEmailSignIn(event) {
+            event.preventDefault(); // Prevent default form submission
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                displayMessage('Please enter both email and password.', 'error');
+                return;
+            }
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                displayMessage(`Signed in as ${userCredential.user.email}`, 'success');
+                console.log('User signed in:', userCredential.user);
+                redirectToHomePage(); // Redirect on successful sign-in
+            } catch (error) {
+                console.error("Error signing in with email and password:", error.message);
+                let errorMessage = 'Failed to sign in. Please check your credentials.';
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'No user found with this email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Incorrect password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address format.';
+                }
+                displayMessage(errorMessage, 'error');
+            }
+        }
+
+        /**
+         * Handles Google sign-in.
+         */
+        async function handleGoogleSignIn() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                // The signed-in user info.
+                const user = result.user;
+                displayMessage(`Signed in with Google as ${user.displayName || user.email}`, 'success');
+                console.log('User signed in with Google:', user);
+                redirectToHomePage(); // Redirect on successful sign-in
+            } catch (error) {
+                console.error("Error signing in with Google:", error.message);
+                if (error.code === 'auth/popup-closed-by-user') {
+                    displayMessage('Google sign-in was cancelled.', 'error');
+                } else {
+                    displayMessage(`Failed to sign in with Google: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Event Listeners
+        signinForm.addEventListener('submit', handleEmailSignIn);
+        googleSigninButton.addEventListener('click', handleGoogleSignIn);
+
+        // Authenticate with custom token or anonymously when the app loads
+        window.onload = async function() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                    // If already signed in via custom token, redirect
+                    if (auth.currentUser) {
+                        redirectToHomePage();
+                    }
+                } else {
+                    // Try anonymous sign-in, but don't redirect immediately
+                    // The onAuthStateChanged listener will handle redirection if a user is found
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously (or checking existing session).');
+                }
+            } catch (error) {
+                console.error("Error during initial authentication:", error.message);
+                displayMessage('Failed to initialize authentication. Please try again.', 'error');
+            }
+        };
+
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in.
+                userId = user.uid;
+                console.log('Auth state changed: User is signed in with UID:', userId);
+                // If user is signed in and not on the home page, redirect
+                if (window.location.pathname.split('/').pop() !== HOME_PAGE_URL) {
+                    redirectToHomePage();
+                }
+            } else {
+                // User is signed out.
+                userId = null;
+                console.log('Auth state changed: User is signed out.');
+            }
+        });
+    </script>
+</body>
+</html>
+
