@@ -188,22 +188,35 @@
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
-            authDomain: "jiujs-social-media.firebaseapp.com",
-            projectId: "jiujs-social-media",
-            storageBucket: "jiujs-social-media.firebasestorage.app",
-            messagingSenderId: "828952698659",
-            appId: "1:828952698659:web:a75e23632ccce924eb3696",
-            measurementId: "G-4GDYQXMTR9"
-        };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+        // Firebase configuration - UPDATED to match your jiujs-9f99e project
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
+            authDomain: "jiujs-9f99e.firebaseapp.com",
+            projectId: "jiujs-9f99e",
+            storageBucket: "jiujs-9f99e.firebasestorage.app",
+            messagingSenderId: "435711965583",
+            appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
+            measurementId: "G-QFT9NVQTC7"
+        };
+
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        let app;
+        let auth;
+        let db;
+        let storage;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            storage = getStorage(app);
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            displayMessage('Error initializing Firebase. Please check your console.', 'error');
+            return; // Stop execution if Firebase isn't initialized
+        }
 
         let currentUserId = null;
         let isAuthReady = false;
