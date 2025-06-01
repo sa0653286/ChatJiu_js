@@ -73,6 +73,7 @@
     <header class="header bg-blue-900 text-white shadow-md rounded-b-lg">
         <h1 class="text-2xl font-bold text-indigo-200">Jiu_js</h1>
         <div class="flex items-center space-x-4">
+            <span id="user-id-display" class="text-sm text-indigo-300"></span>
             <i class="fas fa-search text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
             <a href="profile.html" class="text-indigo-300 hover:text-indigo-100">
                 <i class="fas fa-user-circle text-xl cursor-pointer"></i>
@@ -118,6 +119,7 @@
     </nav>
 
     <script type="module">
+        // Import necessary Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import {
             getAuth,
@@ -136,6 +138,7 @@
         import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
+        // These variables ensure the app connects to the correct Firebase project and user session.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
@@ -146,13 +149,30 @@
             appId: "1:828952698659:web:a75e23632ccce924eb3696",
             measurementId: "G-4GDYQXMTR9"
         };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; // Corrected variable name
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app); // Included for completeness, not directly used here
+        // Initialize Firebase services
+        let app;
+        let auth;
+        let db;
+        let storage; // Included for completeness, not directly used for post fetching
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            storage = getStorage(app);
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            // Display an error message if Firebase fails to initialize
+            const errorMessageDiv = document.createElement('div');
+            errorMessageDiv.className = 'bg-red-100 text-red-800 p-3 rounded-md text-sm mb-4';
+            errorMessageDiv.textContent = 'Error initializing Firebase. Please check your console for details.';
+            postsFeed.before(errorMessageDiv); // Insert before the posts feed
+            loadingMessage.classList.add('hidden'); // Hide loading message
+            return; // Stop execution if Firebase isn't initialized
+        }
+
 
         let userId = null;
         let isAuthReady = false; // Flag to ensure auth is ready before fetching data
@@ -161,6 +181,7 @@
         const postsFeed = document.getElementById('posts-feed');
         const loadingMessage = document.getElementById('loading-message');
         const noPostsMessage = document.getElementById('no-posts-message');
+        const userIdDisplay = document.getElementById('user-id-display'); // Element to display user ID
 
         /**
          * Renders a single post to the feed.
@@ -220,42 +241,45 @@
             const postsCollectionRef = collection(db, `artifacts/${appId}/public/data/posts`);
             const q = query(postsCollectionRef); // Removed orderBy to avoid index issues, will sort in JS
 
-            onSnapshot(q, (snapshot) => {
-                loadingMessage.classList.add('hidden');
-                if (snapshot.empty) {
-                    noPostsMessage.classList.remove('hidden');
-                    return;
-                }
+            try {
+                onSnapshot(q, (snapshot) => {
+                    loadingMessage.classList.add('hidden');
+                    if (snapshot.empty) {
+                        noPostsMessage.classList.remove('hidden');
+                        return;
+                    }
 
-                const posts = [];
-                snapshot.forEach((doc) => {
-                    posts.push({ id: doc.id, ...doc.data() });
+                    const posts = [];
+                    snapshot.forEach((doc) => {
+                        posts.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // Sort posts by timestamp in JavaScript, descending
+                    posts.sort((a, b) => {
+                        const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+                        const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+                        return timeB - timeA;
+                    });
+
+                    postsFeed.innerHTML = ''; // Clear before re-rendering sorted posts
+                    posts.forEach(post => renderPost(post, post.id));
+                }, (error) => {
+                    console.error("Error fetching posts:", error);
+                    loadingMessage.classList.add('hidden');
+                    // Display a user-friendly message
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'bg-red-100 text-red-800 p-3 rounded-md text-sm mt-4';
+                    errorMessageDiv.textContent = 'Failed to load posts. Please check your internet connection or Firebase rules.';
+                    postsFeed.appendChild(errorMessageDiv);
                 });
-
-                // Sort posts by timestamp in JavaScript, descending
-                posts.sort((a, b) => {
-                    const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
-                    const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
-                    return timeB - timeA;
-                });
-
-                postsFeed.innerHTML = ''; // Clear before re-rendering sorted posts
-                posts.forEach(post => renderPost(post, post.id));
-            }, (error) => {
-                console.error("Error fetching posts:", error);
+            } catch (error) {
+                console.error("Error setting up onSnapshot listener:", error);
                 loadingMessage.classList.add('hidden');
-                displayMessage('Failed to load posts. Please try again later.', 'error');
-            });
-        }
-
-        /**
-         * Displays a message in the message box (if one existed, for consistency).
-         * For the home page, this might be less critical but good for debugging.
-         * @param {string} message - The message to display.
-         * @param {string} type - The type of message ('success' or 'error').
-         */
-        function displayMessage(message, type) {
-            console.log(`Message (${type}): ${message}`);
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'bg-red-100 text-red-800 p-3 rounded-md text-sm mt-4';
+                errorMessageDiv.textContent = 'An unexpected error occurred while trying to fetch posts.';
+                postsFeed.appendChild(errorMessageDiv);
+            }
         }
 
         // Authenticate with custom token or anonymously when the app loads
@@ -270,7 +294,11 @@
                 }
             } catch (error) {
                 console.error("Error during initial authentication:", error.message);
-                displayMessage('Failed to initialize authentication. Some features might not work.', 'error');
+                // Display an error message if authentication fails
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'bg-red-100 text-red-800 p-3 rounded-md text-sm mb-4';
+                errorMessageDiv.textContent = 'Failed to initialize authentication. Some features might not work.';
+                document.body.prepend(errorMessageDiv); // Add to the top of the body
             }
         };
 
@@ -279,13 +307,17 @@
             if (user) {
                 userId = user.uid;
                 isAuthReady = true;
+                userIdDisplay.textContent = `User ID: ${userId}`; // Display the full user ID
                 console.log('Auth state changed: User is signed in with UID:', userId);
                 fetchPosts(); // Fetch posts only after authentication is ready
             } else {
                 userId = null;
                 isAuthReady = true; // Still ready, but user is anonymous/signed out
+                userIdDisplay.textContent = 'User ID: Anonymous'; // Indicate anonymous user
                 console.log('Auth state changed: User is signed out or anonymous.');
-                fetchPosts(); // Fetch posts even for anonymous users if security rules allow public read
+                // Decide if you want to fetch posts for anonymous users based on your app's design
+                // If your security rules allow public read, you can call fetchPosts() here.
+                fetchPosts();
             }
         });
     </script>
