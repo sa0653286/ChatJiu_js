@@ -1,287 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jiu_js - Sign In</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Apply the Inter font family to the entire body */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom styles for the "OR CONTINUE WITH" separator line */
-        .separator {
-            position: relative;
-            text-align: center;
-        }
-        /* Pseudo-elements for the lines on either side of the text */
-        .separator::before,
-        .separator::after {
-            content: '';
-            position: absolute;
-            top: 50%; /* Vertically center the line */
-            width: 40%; /* Adjust width of the lines as needed */
-            height: 1px;
-            background-color: #e0e0e0; /* Light gray color for the lines */
-        }
-        /* Position the left line */
-        .separator::before {
-            left: 0;
-        }
-        /* Position the right line */
-        .separator::after {
-            right: 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jiu_js - Sign In</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .separator {
+      position: relative;
+      text-align: center;
+    }
+    .separator::before,
+    .separator::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background-color: #e0e0e0;
+    }
+    .separator::before { left: 0; }
+    .separator::after { right: 0; }
+  </style>
 </head>
 <body class="min-h-screen bg-blue-900 flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 class="text-center text-4xl font-bold text-indigo-800 mb-2">Jiu_js</h1>
-        <p class="text-center text-gray-600 mb-6">Connect and share with friends</p>
 
-        <div id="message-box" class="mb-4 p-3 rounded-md text-sm hidden"></div>
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <h1 class="text-center text-4xl font-bold text-indigo-800 mb-2">Jiu_js</h1>
+    <p class="text-center text-gray-600 mb-6">Connect and share with friends</p>
 
-        <form id="signin-form">
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">Email address</label>
-                <input type="email" id="email" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter your email" required>
-            </div>
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
-                <input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter your password" required>
-            </div>
-            <button type="submit" id="signin-button" class="bg-indigo-600 text-white p-3 rounded-md w-full font-semibold hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                Sign in
-            </button>
-        </form>
+    <div id="message-box" class="mb-4 p-3 rounded-md text-sm hidden"></div>
 
-        <div class="separator my-8 text-gray-500 text-sm">OR CONTINUE WITH</div>
+    <form id="signin-form">
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">Email address</label>
+        <input type="email" id="email" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter your email" required>
+      </div>
+      <div class="mb-6">
+        <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+        <input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" id="signin-button" class="bg-indigo-600 text-white p-3 rounded-md w-full font-semibold hover:bg-indigo-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        Sign in
+      </button>
+    </form>
 
-        <button id="google-signin-button" class="bg-white border border-gray-300 text-gray-700 p-3 rounded-md w-full font-semibold flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" class="w-5 h-5">
-            <span>Continue with Google</span>
-        </button>
+    <div class="separator my-8 text-gray-500 text-sm">OR CONTINUE WITH</div>
 
-        <p class="mt-6 text-center text-gray-600 text-sm">
-            Don't have an account? <a href="signup.html" id="signup-link" class="text-indigo-600 font-semibold hover:underline">Sign up</a>
-        </p>
-    </div>
+    <button id="google-signin-button" class="bg-white border border-gray-300 text-gray-700 p-3 rounded-md w-full font-semibold flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" class="w-5 h-5">
+      <span>Continue with Google</span>
+    </button>
 
-    <script type="module">
-        // Import necessary Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import {
-            getAuth,
-            signInWithEmailAndPassword,
-            GoogleAuthProvider,
-            signInWithPopup,
-            signInAnonymously,
-            onAuthStateChanged,
-            signInWithCustomToken // Import for custom token sign-in
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+    <p class="mt-6 text-center text-gray-600 text-sm">
+      Don't have an account? <a href="signup.html" class="text-indigo-600 font-semibold hover:underline">Sign up</a>
+    </p>
+  </div>
 
-        // Global variables provided by the Canvas environment
-        // __app_id: The unique ID for the current application instance.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // __firebase_config: Firebase configuration object, parsed from a JSON string.
-        // It provides the necessary credentials to connect to your Firebase project.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Fallback configuration for local development if __firebase_config is not defined.
-            apiKey: "YOUR_API_KEY", // Replace with your actual API Key if running locally without Canvas
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
-        };
-        // __initial_auth_token: A custom authentication token for initial sign-in.
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+  <!-- Firebase Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Initialize Firebase services
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); // Get the authentication service instance
-        const db = getFirestore(app); // Get the Firestore database service instance
-        const storage = getStorage(app); // Get the Storage service instance (though not directly used in sign-in logic)
-        const googleProvider = new GoogleAuthProvider(); // Initialize Google Auth Provider
+// ✅For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
+  authDomain: "jiujs-9f99e.firebaseapp.com",
+  projectId: "jiujs-9f99e",
+  storageBucket: "jiujs-9f99e.firebasestorage.app",
+  messagingSenderId: "435711965583",
+  appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
+  measurementId: "G-QFT9NVQTC7"
+};
 
-        let userId = null; // Variable to store the current user's UID
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
 
-        // Get references to DOM elements
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const signinForm = document.getElementById('signin-form');
-        const googleSigninButton = document.getElementById('google-signin-button');
-        const messageBox = document.getElementById('message-box');
-        const signupLink = document.getElementById('signup-link');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const signinForm = document.getElementById('signin-form');
+    const googleSigninButton = document.getElementById('google-signin-button');
+    const messageBox = document.getElementById('message-box');
+    const HOME_PAGE_URL = 'index.html';
 
-        // Define the URL for the home page after successful sign-in
-        const HOME_PAGE_URL = 'index.html';
+    function displayMessage(message, type) {
+      messageBox.textContent = message;
+      messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+      if (type === 'success') {
+        messageBox.classList.add('bg-green-100', 'text-green-800');
+      } else {
+        messageBox.classList.add('bg-red-100', 'text-red-800');
+      }
+      setTimeout(() => {
+        messageBox.classList.add('hidden');
+      }, 5000);
+    }
 
-        /**
-         * Displays a message in the designated message box.
-         * @param {string} message - The text message to display.
-         * @param {string} type - The type of message ('success' or 'error') to apply appropriate styling.
-         */
-        function displayMessage(message, type) {
-            messageBox.textContent = message; // Set the message text
-            // Remove all previous styling classes to ensure clean state
-            messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
-            // Apply specific styling based on message type
-            if (type === 'success') {
-                messageBox.classList.add('bg-green-100', 'text-green-800');
-            } else if (type === 'error') {
-                messageBox.classList.add('bg-red-100', 'text-red-800');
-            }
-            // Make the message box visible
-            messageBox.classList.remove('hidden');
+    function redirectToHomePage() {
+      window.location.href = HOME_PAGE_URL;
+    }
 
-            // Hide the message after 5 seconds for user convenience
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 5000);
-        }
+    async function handleEmailSignIn(event) {
+      event.preventDefault();
+      const email = emailInput.value;
+      const password = passwordInput.value;
 
-        /**
-         * Redirects the user to the defined home page.
-         */
-        function redirectToHomePage() {
-            window.location.href = HOME_PAGE_URL;
-        }
+      if (!email || !password) {
+        displayMessage('Please enter both email and password.', 'error');
+        return;
+      }
 
-        /**
-         * Handles the email and password sign-in process.
-         * Prevents default form submission and attempts to sign in the user.
-         * Displays success or error messages based on the outcome.
-         * @param {Event} event - The form submission event.
-         */
-        async function handleEmailSignIn(event) {
-            event.preventDefault(); // Stop the browser from reloading the page
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        displayMessage(`Signed in as ${userCredential.user.email}`, 'success');
+        redirectToHomePage();
+      } catch (error) {
+        console.error("Sign-in error:", error);
+        let msg = 'Failed to sign in.';
+        if (error.code === 'auth/user-not-found') msg = 'No user found with this email.';
+        else if (error.code === 'auth/wrong-password') msg = 'Incorrect password.';
+        else if (error.code === 'auth/invalid-email') msg = 'Invalid email format.';
+        else if (error.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+        displayMessage(msg, 'error');
+      }
+    }
 
-            const email = emailInput.value;
-            const password = passwordInput.value;
+    async function handleGoogleSignIn() {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        displayMessage(`Signed in as ${result.user.displayName || result.user.email}`, 'success');
+        redirectToHomePage();
+      } catch (error) {
+        console.error("Google sign-in error:", error);
+        const msg = error.code === 'auth/popup-closed-by-user'
+          ? 'Google sign-in was cancelled.'
+          : 'Google sign-in failed.';
+        displayMessage(msg, 'error');
+      }
+    }
 
-            // Basic validation for empty fields
-            if (!email || !password) {
-                displayMessage('Please enter both email and password.', 'error');
-                return; // Exit the function if fields are empty
-            }
-
-            try {
-                // Attempt to sign in with email and password
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                displayMessage(`Signed in as ${userCredential.user.email}`, 'success');
-                console.log('User signed in:', userCredential.user);
-                redirectToHomePage(); // Redirect on successful sign-in
-            } catch (error) {
-                // Log the full error for debugging purposes
-                console.error("Error signing in with email and password:", error.message);
-                let errorMessage = 'Failed to sign in. Please check your credentials.';
-                // Provide more specific error messages based on Firebase error codes
-                if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'No user found with this email. Please sign up.';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMessage = 'Incorrect password. Please try again.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'The email address format is invalid.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many failed login attempts. Please try again later.';
-                }
-                displayMessage(errorMessage, 'error');
-            }
-        }
-
-        /**
-         * Handles the Google sign-in process using a popup window.
-         * Attempts to sign in the user with their Google account.
-         * Displays success or error messages based on the outcome.
-         */
-        async function handleGoogleSignIn() {
-            try {
-                // Attempt to sign in with Google using a popup
-                const result = await signInWithPopup(auth, googleProvider);
-                // You can access the Google Access Token if needed:
-                // const credential = GoogleAuthProvider.credentialFromResult(result);
-                // const token = credential.accessToken;
-                const user = result.user; // The signed-in user information
-
-                displayMessage(`Signed in with Google as ${user.displayName || user.email}`, 'success');
-                console.log('User signed in with Google:', user);
-                redirectToHomePage(); // Redirect on successful sign-in
-            } catch (error) {
-                // Log the full error for debugging purposes
-                console.error("Error signing in with Google:", error.message);
-                // Handle specific Google sign-in errors
-                if (error.code === 'auth/popup-closed-by-user') {
-                    displayMessage('Google sign-in was cancelled.', 'error');
-                } else if (error.code === 'auth/cancelled-popup-request') {
-                    displayMessage('A Google sign-in popup was already open.', 'error');
-                } else {
-                    displayMessage(`Failed to sign in with Google: ${error.message}`, 'error');
-                }
-            }
-        }
-
-        // Add event listeners to the sign-in form and Google sign-in button
-        signinForm.addEventListener('submit', handleEmailSignIn);
-        googleSigninButton.addEventListener('click', handleGoogleSignIn);
-
-        /**
-         * Handles initial authentication when the window loads.
-         * Attempts to sign in with a custom token if available, otherwise anonymously.
-         * If a user is already signed in (e.g., from a previous session), it redirects to the home page.
-         */
-        window.onload = async function() {
-            try {
-                if (initialAuthToken) {
-                    // If a custom authentication token is provided, use it to sign in
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    console.log('Signed in with custom token.');
-                    // If successfully signed in via custom token, redirect immediately
-                    if (auth.currentUser) {
-                        redirectToHomePage();
-                    }
-                } else {
-                    // If no custom token, attempt anonymous sign-in.
-                    // This is useful for establishing a session even if the user isn't explicitly logged in.
-                    // The onAuthStateChanged listener below will handle subsequent redirection if a user is found.
-                    await signInAnonymously(auth);
-                    console.log('Signed in anonymously (or checking existing session).');
-                }
-            } catch (error) {
-                // Log any errors during the initial authentication process
-                console.error("Error during initial authentication:", error.message);
-                displayMessage('Failed to initialize authentication. Please try again.', 'error');
-            }
-        };
-
-        /**
-         * Listens for changes in the Firebase authentication state.
-         * This listener is crucial for managing user sessions and redirects.
-         * It fires when a user signs in, signs out, or when the auth token refreshes.
-         * @param {firebase.User} user - The authenticated user object, or null if signed out.
-         */
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is signed in.
-                userId = user.uid; // Store the user's unique ID
-                console.log('Auth state changed: User is signed in with UID:', userId);
-                // If the user is signed in and not already on the home page, redirect them.
-                // This prevents endless redirects if the user is already on the home page.
-                if (window.location.pathname.split('/').pop() !== HOME_PAGE_URL) {
-                    redirectToHomePage();
-                }
-            } else {
-                // User is signed out.
-                userId = null; // Clear the user ID
-                console.log('Auth state changed: User is signed out.');
-            }
-        });
-    </script>
+    signinForm.addEventListener('submit', handleEmailSignIn);
+    googleSigninButton.addEventListener('click', handleGoogleSignIn);
+  </script>
 </body>
 </html>
-
