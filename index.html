@@ -62,6 +62,7 @@
   </div>
 
   <script type="module">
+    // Import necessary Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import {
       getAuth,
@@ -70,7 +71,10 @@
       signInWithPopup
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    // Firebase configuration (ensure this is correct for your project)
+    // Firebase configuration
+    // IMPORTANT: If you are running this in a Canvas environment,
+    // firebaseConfig should be parsed from the __firebase_config global variable.
+    // For local development, this hardcoded config is fine.
     const firebaseConfig = {
       apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
       authDomain: "jiujs-9f99e.firebaseapp.com",
@@ -81,10 +85,25 @@
       measurementId: "G-QFT9NVQTC7"
     };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const googleProvider = new GoogleAuthProvider();
+    let app;
+    let auth;
+    let googleProvider;
+
+    try {
+      // Initialize Firebase app
+      app = initializeApp(firebaseConfig);
+      // Get Firebase Auth instance
+      auth = getAuth(app);
+      // Create a Google Auth Provider instance
+      googleProvider = new GoogleAuthProvider();
+    } catch (error) {
+      console.error("Firebase initialization error:", error);
+      // Display a message to the user if Firebase fails to initialize
+      document.getElementById('message-box').textContent = 'Error initializing Firebase. Please check your console.';
+      document.getElementById('message-box').classList.remove('hidden');
+      document.getElementById('message-box').classList.add('bg-red-100', 'text-red-800');
+    }
+
 
     // Get DOM elements
     const emailInput = document.getElementById('email');
@@ -93,8 +112,8 @@
     const googleSigninButton = document.getElementById('google-signin-button');
     const messageBox = document.getElementById('message-box');
 
-    // IMPORTANT: Changed to home.html as per your request
-    const HOME_PAGE_URL = 'home.html'; 
+    // Define the URL for the home page after successful sign-in
+    const HOME_PAGE_URL = 'home.html';
 
     /**
      * Displays a message in the message box.
@@ -103,12 +122,16 @@
      */
     function displayMessage(message, type) {
       messageBox.textContent = message;
+      // Remove all previous styling classes
       messageBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+      // Add appropriate styling based on message type
       if (type === 'success') {
         messageBox.classList.add('bg-green-100', 'text-green-800');
       } else {
         messageBox.classList.add('bg-red-100', 'text-red-800');
       }
+      // Make the message box visible
+      messageBox.classList.remove('hidden');
       // Hide the message after 5 seconds
       setTimeout(() => {
         messageBox.classList.add('hidden');
@@ -141,7 +164,7 @@
         displayMessage(`Signed in as ${userCredential.user.email}`, 'success');
         redirectToHomePage(); // Redirect on successful sign-in
       } catch (error) {
-        console.error("Sign-in error:", error);
+        console.error("Sign-in error (Email/Password):", error);
         let msg = 'Failed to sign in.';
         // Provide more specific error messages based on Firebase error codes
         if (error.code === 'auth/user-not-found') msg = 'No user found with this email.';
@@ -154,22 +177,40 @@
 
     /**
      * Handles Google sign-in using a popup.
+     * This function initiates the Google authentication flow.
      */
     async function handleGoogleSignIn() {
+      // Ensure Firebase auth is initialized before attempting sign-in
+      if (!auth || !googleProvider) {
+        displayMessage('Firebase authentication is not initialized.', 'error');
+        console.error('Firebase Auth or Google Provider is not initialized.');
+        return;
+      }
+
       try {
+        // Attempt to sign in with Google using a popup window
         const result = await signInWithPopup(auth, googleProvider);
+        // Display success message with user's display name or email
         displayMessage(`Signed in as ${result.user.displayName || result.user.email}`, 'success');
-        redirectToHomePage(); // Redirect on successful sign-in
+        redirectToHomePage(); // Redirect to the home page on successful sign-in
       } catch (error) {
         console.error("Google sign-in error:", error);
-        const msg = error.code === 'auth/popup-closed-by-user'
-          ? 'Google sign-in was cancelled.'
-          : 'Google sign-in failed.';
+        let msg = 'Google sign-in failed.';
+        // Provide specific error messages for common Google sign-in issues
+        if (error.code === 'auth/popup-closed-by-user') {
+          msg = 'Google sign-in was cancelled by the user.';
+        } else if (error.code === 'auth/cancelled-popup-request') {
+          msg = 'Another sign-in popup was already open or cancelled.';
+        } else if (error.code === 'auth/operation-not-allowed') {
+          msg = 'Google sign-in is not enabled for this Firebase project.';
+        } else if (error.code === 'auth/network-request-failed') {
+          msg = 'Network error. Please check your internet connection.';
+        }
         displayMessage(msg, 'error');
       }
     }
 
-    // Attach event listeners
+    // Attach event listeners to the form and buttons
     signinForm.addEventListener('submit', handleEmailSignIn);
     googleSigninButton.addEventListener('click', handleGoogleSignIn);
   </script>
