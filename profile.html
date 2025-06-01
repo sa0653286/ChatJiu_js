@@ -76,7 +76,9 @@
     <header class="header bg-blue-900 text-white p-4 shadow-md-custom flex justify-between items-center rounded-b-lg">
         <h1 class="text-2xl font-bold text-indigo-200" id="profile-header-username">Profile</h1>
         <div class="flex items-center space-x-4">
-            <i class="fas fa-cog text-xl text-indigo-300 cursor-pointer hover:text-indigo-100"></i>
+            <a href="edit_profile.html" class="text-indigo-300 hover:text-indigo-100">
+                <i class="fas fa-cog text-xl cursor-pointer"></i>
+            </a>
             <i class="fas fa-sign-out-alt text-xl text-indigo-300 cursor-pointer hover:text-indigo-100" id="signout-button"></i>
         </div>
     </header>
@@ -156,22 +158,35 @@
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBrj4Salh_QGSTGG7vxYKK1QDj__ir9NXw",
-            authDomain: "jiujs-social-media.firebaseapp.com",
-            projectId: "jiujs-social-media",
-            storageBucket: "jiujs-social-media.firebasestorage.app",
-            messagingSenderId: "828952698659",
-            appId: "1:828952698659:web:a75e23632ccce924eb3696",
-            measurementId: "G-4GDYQXMTR9"
-        };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+        // Firebase configuration - UPDATED to match your jiujs-9f99e project
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiyUHbfTrMRL42PzAfCzsOre4kOFIJkGo",
+            authDomain: "jiujs-9f99e.firebaseapp.com",
+            projectId: "jiujs-9f99e",
+            storageBucket: "jiujs-9f99e.firebasestorage.app",
+            messagingSenderId: "435711965583",
+            appId: "1:435711965583:web:5f94854004f9ae0829f3fa",
+            measurementId: "G-QFT9NVQTC7"
+        };
+
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app); // Included for completeness
+        let app;
+        let auth;
+        let db;
+        let storage;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            storage = getStorage(app);
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            displayMessage('Error initializing Firebase. Please check your console.', 'error');
+            return; // Stop execution if Firebase isn't initialized
+        }
 
         let currentUserId = null; // Renamed to avoid conflict with userId in other files
         let isAuthReady = false; // Flag to ensure auth is ready before fetching data
@@ -273,13 +288,8 @@
             try {
                 await signOut(auth);
                 displayMessage('You have been signed out.', 'success');
-                // Redirect to sign-in page or update UI
-                console.log('User signed out. Redirecting to sign-in page (simulated).');
-                // In a full app, you would redirect: window.location.href = 'index.html';
-                updateProfileHeader(null); // Clear profile info
-                userPostsGrid.innerHTML = ''; // Clear posts
-                noUserPostsMessage.classList.remove('hidden');
-                noUserPostsMessage.textContent = 'Please sign in to view your posts.';
+                // Redirect to sign-in page after successful logout
+                window.location.href = 'index.html';
             } catch (error) {
                 console.error("Error signing out:", error.message);
                 displayMessage('Failed to sign out. Please try again.', 'error');
@@ -301,10 +311,16 @@
         }
 
         // Event Listeners
+        // Changed from a button to an anchor tag for direct navigation,
+        // but kept the JS listener for consistency if needed for other actions.
         editProfileButton.addEventListener('click', () => {
-            displayMessage('Edit Profile functionality would be implemented here.', 'success');
-            console.log('Simulating Edit Profile action.');
+             // This button now directly navigates via the <a> tag in HTML
+             // No need for JavaScript redirection here if the HTML <a> tag is used.
+             // If you want to perform other actions before redirecting, add them here.
+             console.log('Navigating to edit_profile.html');
+             window.location.href = 'edit_profile.html'; // Explicit redirection
         });
+
 
         signoutButton.addEventListener('click', handleSignOut);
 
